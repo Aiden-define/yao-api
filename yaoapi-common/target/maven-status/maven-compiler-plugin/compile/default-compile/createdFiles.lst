@@ -1,0 +1,8 @@
+com\yao\common\model\enums\InterfaceInfoStatusEnum.class
+com\yao\common\model\entity\InterfaceInfo.class
+com\yao\common\service\InnerUserService.class
+com\yao\common\model\entity\UserInterfaceInfo.class
+com\yao\common\service\InnerUserInterfaceInfoService.class
+com\yao\common\model\vo\UserVO.class
+com\yao\common\model\entity\User.class
+com\yao\common\service\InnerInterfaceInfoService.class
