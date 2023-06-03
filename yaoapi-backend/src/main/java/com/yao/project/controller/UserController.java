@@ -7,6 +7,7 @@ import com.yao.common.model.entity.User;
 import com.yao.project.common.DeleteRequest;
 import com.yao.project.common.ErrorCode;
 import com.yao.project.common.Result;
+import com.yao.project.common.UserHolder;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.model.dto.user.*;
 import com.yao.project.model.vo.UserVO;
@@ -62,19 +63,18 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public Result<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public Result<String> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
+
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.userLogin(userAccount, userPassword, request);
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return Result.success(userVO);
+        String token = userService.userLogin(userAccount, userPassword, request);
+        return Result.success(token);
     }
 
     /**
@@ -100,10 +100,12 @@ public class UserController {
      */
     @GetMapping("/get/login")
     public Result<UserVO> getLoginUser(HttpServletRequest request) {
-        User user = userService.getLoginUser(request);
+        /*User user = userService.getLoginUser(request);
         UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return Result.success(userVO);
+        BeanUtils.copyProperties(user, userVO);*/
+        //走本地
+        UserVO localUser = UserHolder.getLocalUser();
+        return Result.success(localUser);
     }
 
     // region 增删改查

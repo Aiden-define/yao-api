@@ -37,17 +37,18 @@ public interface UserService extends IService<User> {
      * @param userAccount  用户账户
      * @param userPassword 用户密码
      * @param request
-     * @return 脱敏后的用户信息
+     * @return token
      */
-    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    String userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      * 获取当前登录用户
+     * 以ThreadLocal优化流程
      *
      * @param request
      * @return
      */
-    User getLoginUser(HttpServletRequest request);
+    //User getLoginUser(HttpServletRequest request);
 
     /**
      * 是否为管理员

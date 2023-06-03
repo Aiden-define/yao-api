@@ -8,15 +8,20 @@ import com.yao.project.common.ErrorCode;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.UserMapper;
 import com.yao.project.model.dto.user.UserAddRequest;
+import com.yao.project.model.vo.UserVO;
 import com.yao.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static com.yao.project.constant.UserConstant.ADMIN_ROLE;
 import static com.yao.project.constant.UserConstant.USER_LOGIN_STATE;
@@ -34,6 +39,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 盐值，混淆密码
@@ -99,7 +106,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public String userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -124,7 +131,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 3. 记录用户的登录态
         request.getSession().setAttribute(USER_LOGIN_STATE, user);
-        return user;
+        Object attribute = request.getSession().getAttribute(USER_LOGIN_STATE);
+        log.info("{}",attribute);
+        /**
+         * redis改造，先创建token.把登录态加载到redis的缓存中
+         */
+        String token = UUID.randomUUID().toString();
+        //用户脱敏
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        //stringRedisTemplate.opsForValue().set(token,userVO.toString());
+        stringRedisTemplate.opsForValue().setIfAbsent(token,userVO.toString(), 30,TimeUnit.MINUTES);
+        return token;
     }
 
     /**
@@ -133,10 +151,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @param request
      * @return
      */
-    @Override
+   /* @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        //判断缓存中是否有用户
+
         User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
@@ -148,7 +168,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         return currentUser;
-    }
+    }*/
 
     /**
      * 是否为管理员
