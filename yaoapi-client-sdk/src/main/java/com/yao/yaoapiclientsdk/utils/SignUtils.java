@@ -2,6 +2,7 @@ package com.yao.yaoapiclientsdk.utils;
 
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
  * @author DH

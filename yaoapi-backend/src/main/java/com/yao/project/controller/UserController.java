@@ -14,6 +14,7 @@ import com.yao.project.model.vo.UserVO;
 import com.yao.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.yao.project.constant.UserConstant.USER_LOGIN_REDIS;
 
 /**
  * 用户接口
@@ -33,6 +36,8 @@ public class UserController {
 
     @Resource
     private UserService userService;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
     //登录操作
     /**
      * 用户注册
@@ -95,11 +100,11 @@ public class UserController {
     /**
      * 获取当前登录用户
      *
-     * @param request
+     * @param
      * @return
      */
     @GetMapping("/get/login")
-    public Result<UserVO> getLoginUser(HttpServletRequest request) {
+    public Result<UserVO> getLoginUser() {
         /*User user = userService.getLoginUser(request);
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);*/
@@ -108,7 +113,6 @@ public class UserController {
         return Result.success(localUser);
     }
 
-    // region 增删改查
 
     /**
      * 创建用户
@@ -229,5 +233,4 @@ public class UserController {
         return Result.success(userVOPage);
     }
 
-    // endregion
 }

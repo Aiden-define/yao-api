@@ -21,13 +21,18 @@ import javax.annotation.Resource;
 public class InterceptorConfig implements WebMvcConfigurer {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private CorsConfig config;
+
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor(stringRedisTemplate))
                 .excludePathPatterns(
-                        "/user/login"
-                );
-        log.info("你被拦截了！！！");
+                        "/user/login",
+                        "/v3/api-docs"
+                ).order(1);
+        registry.addInterceptor(config).addPathPatterns("/**").order(0);
+
     }
 }

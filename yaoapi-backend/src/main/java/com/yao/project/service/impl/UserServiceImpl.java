@@ -1,10 +1,12 @@
 package com.yao.project.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yao.common.model.entity.User;
 import com.yao.project.common.ErrorCode;
+import com.yao.project.common.UserHolder;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.UserMapper;
 import com.yao.project.model.dto.user.UserAddRequest;
@@ -23,8 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.yao.project.constant.UserConstant.ADMIN_ROLE;
-import static com.yao.project.constant.UserConstant.USER_LOGIN_STATE;
+import static com.yao.project.constant.UserConstant.*;
 
 
 /**
@@ -140,8 +141,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //用户脱敏
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
-        //stringRedisTemplate.opsForValue().set(token,userVO.toString());
-        stringRedisTemplate.opsForValue().setIfAbsent(token,userVO.toString(), 30,TimeUnit.MINUTES);
+        String UserJson = JSONObject.toJSONString(userVO);
+        stringRedisTemplate.opsForValue().setIfAbsent(USER_LOGIN_REDIS+token,UserJson, 30,TimeUnit.MINUTES);
         return token;
     }
 
@@ -154,20 +155,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
    /* @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        UserVO currentUser = UserHolder.getLocalUser();
         //判断缓存中是否有用户
-
-        User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存），这里走数据库保证了实时可以更新
         long userId = currentUser.getId();
-        currentUser = this.getById(userId);
-        if (currentUser == null) {
+        User user = this.getById(userId);
+        if (user == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
-        return currentUser;
+        return user;
     }*/
 
     /**
@@ -179,9 +178,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public boolean isAdmin(HttpServletRequest request) {
         // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user != null && ADMIN_ROLE.equals(user.getUserRole());
+        UserVO userVO = UserHolder.getLocalUser();
+        return userVO != null && ADMIN_ROLE.equals(userVO.getUserRole());
     }
 
     /**
@@ -191,12 +189,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
+        String token = request.getHeader("authorization");
+        if (token == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
         // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
-        return true;
+        return stringRedisTemplate.delete(USER_LOGIN_REDIS + token);
     }
 
 }

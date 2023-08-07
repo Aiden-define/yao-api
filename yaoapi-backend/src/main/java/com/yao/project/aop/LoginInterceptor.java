@@ -1,6 +1,5 @@
 package com.yao.project.aop;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.google.gson.Gson;
 import com.yao.project.common.ErrorCode;
 import com.yao.project.common.UserHolder;
@@ -8,11 +7,12 @@ import com.yao.project.exception.BusinessException;
 import com.yao.project.model.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import static com.yao.project.constant.UserConstant.USER_LOGIN_REDIS;
 
 /**
  * @author DH
@@ -32,11 +32,11 @@ public class LoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String token = request.getHeader("authorization");
         if (token.isEmpty()) {
-
             throw new BusinessException(ErrorCode.NOT_LOGIN);
             //return false;
         }
-        String stringUser = stringRedisTemplate.opsForValue().get(token);
+        //取出Redis中缓存的userVo
+        String stringUser = stringRedisTemplate.opsForValue().get(USER_LOGIN_REDIS+token);
         if (stringUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }

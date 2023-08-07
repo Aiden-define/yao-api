@@ -7,10 +7,11 @@ package com.yao.project.constant;
  */
 public interface UserConstant {
 
+    String USER_LOGIN_STATE = "userLoginState";
     /**
      * 用户登录态键
      */
-    String USER_LOGIN_STATE = "userLoginState";
+    String USER_LOGIN_REDIS ="user:login:";
 
     /**
      * 系统用户 id（虚拟用户）
@@ -29,5 +30,4 @@ public interface UserConstant {
      */
     String ADMIN_ROLE = "admin";
 
-    // endregion
 }
