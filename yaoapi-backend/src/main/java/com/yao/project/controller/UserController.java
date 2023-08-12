@@ -4,13 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.yao.common.model.entity.User;
+import com.yao.common.model.vo.UserVO;
 import com.yao.project.common.DeleteRequest;
 import com.yao.project.common.ErrorCode;
 import com.yao.project.common.Result;
-import com.yao.project.common.UserHolder;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.model.dto.user.*;
-import com.yao.project.model.vo.UserVO;
 import com.yao.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -20,10 +19,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.yao.project.constant.UserConstant.USER_LOGIN_REDIS;
 
 /**
  * 用户接口
@@ -63,12 +61,12 @@ public class UserController {
     /**
      * 用户登录
      *
-     * @param userLoginRequest
-     * @param request
-     * @return
+     * @param userLoginRequest 登录封装类
+     * @param res res
+     * @return UserVO
      */
     @PostMapping("/login")
-    public Result<String> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public Result<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletResponse res) {
         if (userLoginRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -78,22 +76,23 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String token = userService.userLogin(userAccount, userPassword, request);
-        return Result.success(token);
+        UserVO userVO = userService.userLogin(userAccount, userPassword, res);
+        return Result.success(userVO);
     }
 
     /**
      * 用户注销
      *
      * @param request
+     * @param response
      * @return
      */
     @PostMapping("/logout")
-    public Result<Boolean> userLogout(HttpServletRequest request) {
+    public Result<Boolean> userLogout(HttpServletRequest request,HttpServletResponse response) {
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = userService.userLogout(request);
+        boolean result = userService.userLogout(request,response);
         return Result.success(result);
     }
 
@@ -104,22 +103,21 @@ public class UserController {
      * @return
      */
     @GetMapping("/get/login")
-    public Result<UserVO> getLoginUser() {
-        /*User user = userService.getLoginUser(request);
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);*/
+    public Result<UserVO> getLoginUser(HttpServletRequest request) {
         //走本地
-        UserVO localUser = UserHolder.getLocalUser();
-        return Result.success(localUser);
+        User loginUser = userService.getLoginUser(request);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(loginUser, userVO);
+        return Result.success(userVO);
     }
 
 
     /**
      * 创建用户
      *
-     * @param userAddRequest
-     * @param request
-     * @return
+     * @param userAddRequest 添加封装类
+     * @param request  request
+     * @return 用户id
      */
     @PostMapping("/add")
     public Result<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {

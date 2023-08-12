@@ -3,8 +3,6 @@ package com.yao.common.model.vo;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
-
 /**
  * 用户视图
  *
@@ -45,12 +43,12 @@ public class UserVO implements Serializable {
     /**
      * 创建时间
      */
-    private Date createTime;
+   // private Date createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    //private Date updateTime;
 
     private static final long serialVersionUID = 1L;
 }

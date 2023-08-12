@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -22,18 +23,21 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Profile("dev")
 public class Knife4jConfig {
 
-    @Bean
+    @Bean(value = "defaultApi2")
     public Docket defaultApi2() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(new ApiInfoBuilder()
-                        .title("project-backend")
-                        .description("project-backend")
-                        .version("1.0")
-                        .build())
+                .apiInfo(apiInfo())
                 .select()
                 // 指定 Controller 扫描包路径
                 .apis(RequestHandlerSelectors.basePackage("com.yao.project.controller"))
                 .paths(PathSelectors.any())
+                .build();
+    }
+    public ApiInfo apiInfo(){
+        return new ApiInfoBuilder()
+                .title("yaoApi Documentation")
+                .description("简单好用的接口调用平台")
+                .version("1.0")
                 .build();
     }
 }

@@ -1,11 +1,12 @@
 package com.yao.project.aop;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.yao.common.model.entity.User;
+import com.yao.common.model.vo.UserVO;
 import com.yao.project.annotation.AuthCheck;
 import com.yao.project.common.ErrorCode;
-import com.yao.project.common.UserHolder;
 import com.yao.project.exception.BusinessException;
-import com.yao.project.model.vo.UserVO;
+import com.yao.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -16,6 +17,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +33,9 @@ import java.util.stream.Collectors;
 @Component
 public class AuthInterceptor {
 
+    @Resource
+    private UserService userService;
+
     /**
      * 执行拦截
      *
@@ -43,9 +48,10 @@ public class AuthInterceptor {
     public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck authCheck) throws Throwable {
         List<String> anyRole = Arrays.stream(authCheck.anyRole()).filter(StringUtils::isNotBlank).collect(Collectors.toList());
         String mustRole = authCheck.mustRole();
+        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
-        //User user = userService.getLoginUser(request);
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         // 拥有任意权限即通过
         if (CollectionUtils.isNotEmpty(anyRole)) {
             String userRole = loginUser.getUserRole();

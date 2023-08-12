@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yao.common.model.entity.InterfaceInfo;
 import com.yao.common.model.entity.User;
+import com.yao.common.model.vo.UserVO;
 import com.yao.project.annotation.AuthCheck;
 import com.yao.project.common.*;
 import com.yao.project.constant.CommonConstant;
@@ -13,7 +14,6 @@ import com.yao.project.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
-import com.yao.project.model.vo.UserVO;
 import com.yao.project.service.InterfaceInfoService;
 import com.yao.project.service.UserService;
 import com.yao.yaoapiclientsdk.client.YaoApiClient;
@@ -62,7 +62,7 @@ public class InterfaceInfoController {
         BeanUtils.copyProperties(interfaceInfoAddRequest, interfaceInfo);
         // 校验
         interfaceInfoService.validInterfaceInfo(interfaceInfo, true);
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         interfaceInfo.setUserId(loginUser.getId());
         boolean result = interfaceInfoService.save(interfaceInfo);
         if (!result) {
@@ -85,7 +85,7 @@ public class InterfaceInfoController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
@@ -117,7 +117,7 @@ public class InterfaceInfoController {
         BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
         // 参数校验
         interfaceInfoService.validInterfaceInfo(interfaceInfo, false);
-        UserVO userVo = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         long id = interfaceInfoUpdateRequest.getId();
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
@@ -125,7 +125,7 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 仅本人或管理员可修改
-        if (!oldInterfaceInfo.getUserId().equals(userVo.getId()) && !userService.isAdmin(request)) {
+        if (!oldInterfaceInfo.getUserId().equals(loginUser.getId()) && !userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
         boolean result = interfaceInfoService.updateById(interfaceInfo);
@@ -271,7 +271,7 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.INTERFACE_CLOSE,"接口已关闭");
         }
         //通过密钥调用接口
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         String accessKey = loginUser.getAccessKey();
         String secretKey = loginUser.getSecretKey();
         YaoApiClient apiClient = new YaoApiClient(accessKey, secretKey);

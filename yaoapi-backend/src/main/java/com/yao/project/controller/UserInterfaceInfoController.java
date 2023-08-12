@@ -8,13 +8,11 @@ import com.yao.project.annotation.AuthCheck;
 import com.yao.project.common.DeleteRequest;
 import com.yao.project.common.ErrorCode;
 import com.yao.project.common.Result;
-import com.yao.project.common.UserHolder;
 import com.yao.project.constant.CommonConstant;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoQueryRequest;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoUpdateRequest;
-import com.yao.project.model.vo.UserVO;
 import com.yao.project.service.UserInterfaceInfoService;
 import com.yao.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +58,7 @@ public class UserInterfaceInfoController {
         UserInterfaceInfo userInterfaceInfo = new UserInterfaceInfo();
         BeanUtils.copyProperties(userInterfaceInfoAddRequest, userInterfaceInfo);
         // 校验
-       // User loginUser = userService.getLoginUser(request);
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         userInterfaceInfo.setUserId(loginUser.getId());
         userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, true);
         boolean result = false;
@@ -91,8 +88,7 @@ public class UserInterfaceInfoController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        //User user = userService.getLoginUser(request);
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         UserInterfaceInfo oldUserInterfaceInfo = userInterfaceInfoService.getById(id);
@@ -125,8 +121,7 @@ public class UserInterfaceInfoController {
         BeanUtils.copyProperties(userInterfaceInfoUpdateRequest, userInterfaceInfo);
         // 参数校验
         userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, false);
-        //User user = userService.getLoginUser(request);
-        UserVO loginUser = UserHolder.getLocalUser();
+        User loginUser = userService.getLoginUser(request);
         long id = userInterfaceInfoUpdateRequest.getId();
         // 判断是否存在
         UserInterfaceInfo oldUserInterfaceInfo = userInterfaceInfoService.getById(id);

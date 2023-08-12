@@ -3,9 +3,11 @@ package com.yao.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yao.common.model.entity.User;
+import com.yao.common.model.vo.UserVO;
 import com.yao.project.model.dto.user.UserAddRequest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * 用户服务
@@ -36,10 +38,17 @@ public interface UserService extends IService<User> {
      *
      * @param userAccount  用户账户
      * @param userPassword 用户密码
-     * @param request
+     * @param res
      * @return token
      */
-    String userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    UserVO userLogin(String userAccount, String userPassword, HttpServletResponse res);
+
+    /**
+     * 获取当前登录用户
+     * @param request
+     * @return
+     */
+    User getLoginUser(HttpServletRequest request);
 
     /**
      * 获取当前登录用户
@@ -64,7 +73,7 @@ public interface UserService extends IService<User> {
      * @param request
      * @return
      */
-    boolean userLogout(HttpServletRequest request);
+    boolean userLogout(HttpServletRequest request,HttpServletResponse response);
 
 
 }

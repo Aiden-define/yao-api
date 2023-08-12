@@ -1,16 +1,16 @@
 package com.yao.project.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.gson.Gson;
 import com.yao.common.model.entity.User;
+import com.yao.common.model.vo.UserVO;
 import com.yao.project.common.ErrorCode;
-import com.yao.project.common.UserHolder;
+import com.yao.project.common.JwtUtils;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.UserMapper;
 import com.yao.project.model.dto.user.UserAddRequest;
-import com.yao.project.model.vo.UserVO;
 import com.yao.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,9 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.yao.project.constant.UserConstant.*;
@@ -64,29 +65,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        // 账户不能重复
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        long count = userMapper.selectCount(queryWrapper);
-        if (count > 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+        synchronized (userAccount.intern()) {
+            // 账户不能重复
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("userAccount", userAccount);
+            long count = userMapper.selectCount(queryWrapper);
+            if (count > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+            }
+            // 2. 加密
+            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+            // 3. 分配ak,sk
+            String accessKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(10)).getBytes());
+            String secretKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(12)).getBytes());
+            // 3. 插入数据
+            User user = new User();
+            user.setUserAccount(userAccount);
+            user.setUserPassword(encryptPassword);
+            user.setAccessKey(accessKey);
+            user.setSecretKey(secretKey);
+            boolean saveResult = this.save(user);
+            if (!saveResult) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+            }
+            return user.getId();
         }
-        // 2. 加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-        // 3. 分配ak,sk
-        String accessKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(10)).getBytes());
-        String secretKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(12)).getBytes());
-        // 3. 插入数据
-        User user = new User();
-        user.setUserAccount(userAccount);
-        user.setUserPassword(encryptPassword);
-        user.setAccessKey(accessKey);
-        user.setSecretKey(secretKey);
-        boolean saveResult = this.save(user);
-        if (!saveResult) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
-        }
-        return user.getId();
 
     }
 
@@ -106,7 +109,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public String userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public UserVO userLogin(String userAccount, String userPassword, HttpServletResponse res) {
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -117,6 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userPassword.length() < 8) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
         }
+
         // 2. 加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 查询用户是否存在
@@ -129,23 +133,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        // 3. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
-        Object attribute = request.getSession().getAttribute(USER_LOGIN_STATE);
-        log.info("{}", attribute);
-        /**
-         * redis改造，先创建token.把登录态加载到redis的缓存中
-         */
-        String token = UUID.randomUUID().toString();
-        //用户脱敏
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        String UserJson = JSONObject.toJSONString(userVO);
-        Boolean b = stringRedisTemplate.opsForValue().setIfAbsent(USER_LOGIN_REDIS + token, UserJson, 30, TimeUnit.MINUTES);
-        if (Boolean.FALSE.equals(b)) {
-            throw new BusinessException(ErrorCode.REDIS_ERROR);
+        return setUserState(user,res);
+    }
+
+    /**
+     * 获取当前登录用户
+     *
+     * @param request request
+     * @return user
+     */
+    public User getLoginUser(HttpServletRequest request) {
+        // 先判断是否已登录
+        Long userId = JwtUtils.getUserIdByToken(request);
+
+        if (userId == null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
-        return token;
+        String userJson = stringRedisTemplate.opsForValue().get(USER_LOGIN_REDIS+userId);
+        User user = new Gson().fromJson(userJson, User.class);
+        if (user == null){
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        return user;
+    }
+
+
+    /**
+     * JWT加密，用户信息缓存
+     * @param user user
+     * @param res res
+     * @return userVO
+     */
+    private UserVO setUserState(User user,HttpServletResponse res) {
+
+        String token = JwtUtils.getJwtToken(user.getId(), user.getUserName());
+        Cookie cookie = new Cookie("token",token);
+        // 让所有路径可拿到
+        cookie.setPath("/");
+        res.addCookie(cookie);
+        // 用户信息缓存
+        String userJson = new Gson().toJson(user);
+        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS+user.getId(),userJson, JwtUtils.EXPIRE,TimeUnit.MILLISECONDS);
+        return setLoginUserVO(user);
+    }
+
+    /**
+     * 获取用户的脱敏信息
+     * @param user user
+     * @return userVO
+     */
+    private UserVO setLoginUserVO(User user) {
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user,userVO);
+        return userVO;
     }
 
     /**
@@ -157,8 +197,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public boolean isAdmin(HttpServletRequest request) {
         // 仅管理员可查询
-        UserVO userVO = UserHolder.getLocalUser();
-        return userVO != null && ADMIN_ROLE.equals(userVO.getUserRole());
+        User loginUser = getLoginUser(request);
+        return ADMIN_ROLE.equals(loginUser.getUserRole());
     }
 
     /**
@@ -167,14 +207,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @param request
      */
     @Override
-    public boolean userLogout(HttpServletRequest request) {
-        String token = request.getHeader("authorization");
-        if (token == null) {
+    public boolean userLogout(HttpServletRequest request,HttpServletResponse response) {
+        Long userIdByToken = JwtUtils.getUserIdByToken(request);
+        if (userIdByToken == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
-        // 移除登录态
-        return Boolean.TRUE.equals(stringRedisTemplate.delete(USER_LOGIN_REDIS + token));
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            // 移除登录态
+            if(cookie.getName().equals("token")){
+                Cookie timeOut = new Cookie(cookie.getName(), cookie.getValue());
+                timeOut.setMaxAge(0);
+                response.addCookie(timeOut);
+                stringRedisTemplate.delete(USER_LOGIN_REDIS + userIdByToken);
+            }
+        }
+        return true;
+
     }
+
 
 }
 
