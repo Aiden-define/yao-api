@@ -31,7 +31,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String token = request.getHeader("authorization");
-        if (token.isEmpty()) {
+        if (token==null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
             //return false;
         }

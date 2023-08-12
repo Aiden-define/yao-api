@@ -10,7 +10,8 @@ public enum ErrorCode {
     NOT_FOUND_ERROR(40400, "请求数据不存在",""),
     SYSTEM_ERROR(50000,"系统错误",""),
     OPERATION_ERROR(50001, "操作失败",""),
-    INTERFACE_CLOSE(50002, "接口未开启","");
+    INTERFACE_CLOSE(50002, "接口未开启",""),
+    REDIS_ERROR(99999, "Redis错误","");
 
 
     private final int code;

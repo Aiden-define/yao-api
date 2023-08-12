@@ -4,7 +4,7 @@ Java SpringBoot 项目初始模板，整合了常用框架和示例代码
 
 ## 模板功能
 
-- Spring Boot 2.7.0（贼新）
+- Spring Boot 2.7.0
 - Spring MVC
 - MySQL 驱动
 - MyBatis

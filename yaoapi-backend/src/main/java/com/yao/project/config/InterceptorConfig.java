@@ -21,8 +21,6 @@ import javax.annotation.Resource;
 public class InterceptorConfig implements WebMvcConfigurer {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    @Resource
-    private CorsConfig config;
 
 
     @Override
@@ -30,9 +28,12 @@ public class InterceptorConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginInterceptor(stringRedisTemplate))
                 .excludePathPatterns(
                         "/user/login",
-                        "/v3/api-docs"
+                        "/user/register",
+                        "/v3/api-docs",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        "/doc.html"
                 ).order(1);
-        registry.addInterceptor(config).addPathPatterns("/**").order(0);
 
     }
 }

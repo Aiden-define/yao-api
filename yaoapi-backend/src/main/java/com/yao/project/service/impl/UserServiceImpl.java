@@ -64,31 +64,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
-        synchronized (userAccount.intern()) {
-            // 账户不能重复
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("userAccount", userAccount);
-            long count = userMapper.selectCount(queryWrapper);
-            if (count > 0) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
-            }
-            // 2. 加密
-            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 分配ak,sk
-            String accessKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(10)).getBytes());
-            String sercetKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(12)).getBytes());
-            // 3. 插入数据
-            User user = new User();
-            user.setUserAccount(userAccount);
-            user.setUserPassword(encryptPassword);
-            user.setAccessKey(accessKey);
-            user.setSecretKey(sercetKey);
-            boolean saveResult = this.save(user);
-            if (!saveResult) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
-            }
-            return user.getId();
+        // 账户不能重复
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        long count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
         }
+        // 2. 加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        // 3. 分配ak,sk
+        String accessKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(10)).getBytes());
+        String secretKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(12)).getBytes());
+        // 3. 插入数据
+        User user = new User();
+        user.setUserAccount(userAccount);
+        user.setUserPassword(encryptPassword);
+        user.setAccessKey(accessKey);
+        user.setSecretKey(secretKey);
+        boolean saveResult = this.save(user);
+        if (!saveResult) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+        }
+        return user.getId();
+
     }
 
     @Override
@@ -133,7 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 3. 记录用户的登录态
         request.getSession().setAttribute(USER_LOGIN_STATE, user);
         Object attribute = request.getSession().getAttribute(USER_LOGIN_STATE);
-        log.info("{}",attribute);
+        log.info("{}", attribute);
         /**
          * redis改造，先创建token.把登录态加载到redis的缓存中
          */
@@ -142,32 +141,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         String UserJson = JSONObject.toJSONString(userVO);
-        stringRedisTemplate.opsForValue().setIfAbsent(USER_LOGIN_REDIS+token,UserJson, 30,TimeUnit.MINUTES);
+        Boolean b = stringRedisTemplate.opsForValue().setIfAbsent(USER_LOGIN_REDIS + token, UserJson, 30, TimeUnit.MINUTES);
+        if (Boolean.FALSE.equals(b)) {
+            throw new BusinessException(ErrorCode.REDIS_ERROR);
+        }
         return token;
     }
-
-    /**
-     * 获取当前登录用户
-     *
-     * @param request
-     * @return
-     */
-   /* @Override
-    public User getLoginUser(HttpServletRequest request) {
-        // 先判断是否已登录
-        UserVO currentUser = UserHolder.getLocalUser();
-        //判断缓存中是否有用户
-        if (currentUser == null || currentUser.getId() == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN);
-        }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存），这里走数据库保证了实时可以更新
-        long userId = currentUser.getId();
-        User user = this.getById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN);
-        }
-        return user;
-    }*/
 
     /**
      * 是否为管理员
@@ -194,7 +173,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
         // 移除登录态
-        return stringRedisTemplate.delete(USER_LOGIN_REDIS + token);
+        return Boolean.TRUE.equals(stringRedisTemplate.delete(USER_LOGIN_REDIS + token));
     }
 
 }

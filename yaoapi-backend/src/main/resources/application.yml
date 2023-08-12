@@ -16,9 +16,11 @@ spring:
     store-type: redis
   # redis 配置
   redis:
-    host: 192.168.230.128
+    #host: 192.168.230.128
+    host: 116.62.230.1
     port: 6379
-    password: 123456
+    #password: 123456
+    password: 18270122455yjh.
     lettuce:
       pool:
         max-active: 10
