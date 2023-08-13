@@ -2,7 +2,7 @@ package com.yao.project.common;
 
 public enum ErrorCode {
 
-    SUCCESS(0,"ok",""),
+    SUCCESS(200,"ok",""),
     PARAMS_ERROR(40000,"请求参数错误",""),
     NULL_ERROR(40001,"请求参数为空",""),
     NOT_LOGIN(40002,"未登录",""),

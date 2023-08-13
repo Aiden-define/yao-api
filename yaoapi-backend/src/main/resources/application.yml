@@ -27,6 +27,18 @@ spring:
         max-idle: 10
         min-idle: 1
         time-between-eviction-runs: 10s
+  #邮箱配置
+  mail:
+    host: smtp.qq.com
+    username: 2397806471@qq.com
+    password: nlmaldbuopkjeadf
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+    default-encoding: utf-8
+
 server:
   port: 7529
   servlet:

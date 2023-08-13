@@ -30,4 +30,30 @@ public interface UserConstant {
      */
     String ADMIN_ROLE = "admin";
 
+    /**
+     * 邮箱校验码
+     */
+    String EMAIL_REGEX ="^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$";
+
+    /**
+     * 发送的验证码长度
+     */
+    int CODE_LENGTH = 6;
+
+    /**
+     * 用户验证码存入redis
+     */
+    String  USER_CODE_REDIS = "user:code:";
+
+    /**
+     * 用户默认头像
+     */
+    String USER_PIC = "https://logistics-back-pic.oss-cn-beijing.aliyuncs.com/2023-08-09/1691583032956-pic.png";
+
+    /**
+     * 注册生成的验证码图
+     */
+    String NUMPIC_PREFIX = "number:pic:";
+
+
 }

@@ -44,17 +44,12 @@ public class UserController {
      * @return
      */
     @PostMapping("/register")
-    public Result<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public Result<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest,HttpServletRequest httpServletRequest) {
         if (userRegisterRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String userAccount = userRegisterRequest.getUserAccount();
-        String userPassword = userRegisterRequest.getUserPassword();
-        String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
-        }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+
+        long result = userService.userRegister(userRegisterRequest,httpServletRequest);
         return Result.success(result);
     }
 
@@ -78,6 +73,42 @@ public class UserController {
         }
         UserVO userVO = userService.userLogin(userAccount, userPassword, res);
         return Result.success(userVO);
+    }
+
+
+    /**
+     * 发送邮箱验证码
+     * @return
+     */
+    @PostMapping("/sendCode")
+    public Result<Boolean> sendCode(@RequestParam String email){
+        return Result.success(userService.sendCode(email));
+    }
+
+    /**
+     * 通过邮箱登录
+     * @param userLoginBySmsRequest
+     * @param res
+     * @return
+     */
+    @PostMapping("/loginBySms")
+    public Result<UserVO> userLoginBySms(@RequestBody UserLoginRequest userLoginBySmsRequest, HttpServletResponse res){
+        if(userLoginBySmsRequest == null){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        UserVO userVO = userService.userLoginBySms(userLoginBySmsRequest,res);
+        return Result.success(userVO);
+    }
+
+    /**
+     * 获取图形验证码
+     *
+     * @param request
+     * @param response
+     */
+    @GetMapping("/getNumPic")
+    public void getNumPic(HttpServletRequest request, HttpServletResponse response) {
+        userService.getNumPic(request, response);
     }
 
     /**
@@ -119,13 +150,13 @@ public class UserController {
      * @param request  request
      * @return 用户id
      */
-    @PostMapping("/add")
+   /* @PostMapping("/add")
     public Result<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
         if (userAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         return Result.success(userService.userAdd(userAddRequest));
-    }
+    }*/
 
     /**
      * 删除用户

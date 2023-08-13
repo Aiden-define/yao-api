@@ -36,6 +36,11 @@ public class UserQueryRequest extends PageRequest implements Serializable {
     private String userAvatar;
 
     /**
+     * 用户邮箱
+     */
+    private String email;
+
+    /**
      * 性别
      */
     private Integer gender;

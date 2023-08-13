@@ -34,7 +34,7 @@ public  class  Result<T> implements Serializable {
     }*/
 
     public static<T> Result<T> success(T data){
-        return new Result<>(0,data,"ok","");
+        return new Result<>(200,data,"ok","");
     }
 
     public static<T> Result<T> success(int code,String message){

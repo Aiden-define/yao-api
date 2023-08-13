@@ -21,6 +21,9 @@ create table if not exists user
         unique (userAccount)
 ) comment '用户';
 
+alter table user
+    add email varchar(128) null comment '邮箱';
+
 /*-- 帖子表
 create table if not exists InterfaceInfo
 (

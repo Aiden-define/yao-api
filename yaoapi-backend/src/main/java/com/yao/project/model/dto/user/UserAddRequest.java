@@ -38,6 +38,11 @@ public class UserAddRequest implements Serializable {
     private String userRole;
 
     /**
+     * 用户邮箱
+     */
+    private String email;
+
+    /**
      * 密码
      */
     private String userPassword;

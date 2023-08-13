@@ -1,5 +1,5 @@
 # 应用服务 WEB 访问端口
 server:
-  port: 8888
+  port: 8099
   servlet:
     context-path: /api
