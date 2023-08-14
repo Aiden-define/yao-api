@@ -82,7 +82,7 @@ const Login: React.FC = () => {
         message.error(res.description)
       }
     } catch (error) {
-      console.log("jinru")
+     // console.log("jinru")
       const defaultLoginFailureMessage = '登录失败，请重试！';
       console.log(error);
       message.error(defaultLoginFailureMessage);

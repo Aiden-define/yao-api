@@ -1,7 +1,12 @@
 package com.yao.project.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yao.common.model.entity.InterfaceInfo;
+import com.yao.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
 * @author DH
@@ -16,4 +21,24 @@ public interface InterfaceInfoService extends IService<InterfaceInfo> {
      * @param add 是否为创建校验
      */
     void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean add);
+
+    /**
+     * 下载SDK
+     * @return
+     */
+    void downloadSdk(HttpServletResponse res);
+
+    /**
+     * 遍历展示接口
+     * @param interfaceInfoQueryRequest
+     * @return
+     */
+    Page<InterfaceInfo> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest);
+
+    /**
+     * 添加搜索的相关条件
+     * @param interfaceInfoQuery 前端的适配条件
+     * @return queryWrapper
+     */
+    QueryWrapper<InterfaceInfo> addCondition(InterfaceInfo interfaceInfoQuery);
 }

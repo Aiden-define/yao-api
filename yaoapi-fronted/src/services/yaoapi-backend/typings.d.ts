@@ -86,7 +86,6 @@ declare namespace API {
   type listInterfaceInfoByPageUsingGETParams = {
     current?: number;
     description?: string;
-    id?: number;
     method?: string;
     name?: string;
     pageSize?: number;
@@ -103,7 +102,6 @@ declare namespace API {
   type listInterfaceInfoUsingGETParams = {
     current?: number;
     description?: string;
-    id?: number;
     method?: string;
     name?: string;
     pageSize?: number;
@@ -381,6 +379,13 @@ declare namespace API {
     message?: string;
   };
 
+  type ResultUserKeyVO = {
+    code?: number;
+    data?: UserKeyVO;
+    description?: string;
+    message?: string;
+  };
+
   type ResultUserVO = {
     code?: number;
     data?: UserVO;
@@ -420,6 +425,11 @@ declare namespace API {
     totalNum?: number;
   };
 
+  type UserKeyVO = {
+    accessKey?: string;
+    secretKey?: string;
+  };
+
   type UserLoginRequest = {
     code?: string;
     email?: string;
@@ -435,17 +445,13 @@ declare namespace API {
   };
 
   type UserUpdateRequest = {
-    email?: string;
     gender?: number;
     id?: number;
-    userAccount?: string;
-    userAvatar?: string;
     userName?: string;
-    userPassword?: string;
-    userRole?: string;
   };
 
   type UserVO = {
+    createTime?: string;
     gender?: number;
     id?: number;
     userAccount?: string;

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -171,28 +172,9 @@ public class InterfaceInfoController {
      * @return
      */
     @GetMapping("/list/page")
-    public Result<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest request) {
-        if (interfaceInfoQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
-        BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
-        long current = interfaceInfoQueryRequest.getCurrent();
-        long size = interfaceInfoQueryRequest.getPageSize();
-        String sortField = interfaceInfoQueryRequest.getSortField();
-        String sortOrder = interfaceInfoQueryRequest.getSortOrder();
-        String description = interfaceInfoQuery.getDescription();
-        // description 需支持模糊搜索
-        interfaceInfoQuery.setDescription(null);
-        // 限制爬虫
-        if (size > 50) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-        queryWrapper.like(StringUtils.isNotBlank(description), "description", description);
-        queryWrapper.orderBy(StringUtils.isNotBlank(sortField),
-                sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
-        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size), queryWrapper);
+    @AuthCheck(mustRole = "admin")
+    public Result<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
+        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.listInterfaceInfoByPage(interfaceInfoQueryRequest);
         return Result.success(interfaceInfoPage);
     }
 
@@ -279,5 +261,16 @@ public class InterfaceInfoController {
         // 根据调用方法调用
         String userNameByPost = apiClient.getUserNameByPost(user);
         return Result.success(userNameByPost);
+    }
+
+
+    /**
+     * sdk下载
+     *
+     * @return
+     */
+    @GetMapping("/downloadSdk")
+    public void downloadSdk(HttpServletResponse req) {
+        interfaceInfoService.downloadSdk(req);
     }
 }

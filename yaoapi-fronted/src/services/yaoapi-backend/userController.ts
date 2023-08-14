@@ -48,6 +48,14 @@ export async function getNumPicUsingGET(options?: { [key: string]: any }) {
   });
 }
 
+/** getUserKey POST /api/user/getUserKey */
+export async function getUserKeyUsingPOST(options?: { [key: string]: any }) {
+  return request<API.ResultUserKeyVO>('/api/user/getUserKey', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** listUser GET /api/user/list */
 export async function listUserUsingGET(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -131,6 +139,14 @@ export async function userRegisterUsingPOST(
   });
 }
 
+/** resetUserKey POST /api/user/resetUserKey */
+export async function resetUserKeyUsingPOST(options?: { [key: string]: any }) {
+  return request<API.ResultUserKeyVO>('/api/user/resetUserKey', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** sendCode POST /api/user/sendCode */
 export async function sendCodeUsingPOST(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -152,6 +168,18 @@ export async function updateUserUsingPOST(
   options?: { [key: string]: any },
 ) {
   return request<API.Resultboolean>('/api/user/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** updateUserPic POST /api/user/updateUserPic */
+export async function updateUserPicUsingPOST(body: string, options?: { [key: string]: any }) {
+  return request<API.Resultboolean>('/api/user/updateUserPic', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

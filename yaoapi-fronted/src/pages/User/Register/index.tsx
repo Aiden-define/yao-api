@@ -3,7 +3,6 @@ import {ArrowRightOutlined, LockOutlined, UserOutlined} from '@ant-design/icons'
 import {LoginForm, ProFormText} from '@ant-design/pro-components';
 import {Alert, message, Tabs} from 'antd';
 import React, {useEffect, useState} from 'react';
-//import styles from './index.less';
 import {history, Link} from '@@/exports';
 
 import {randomStr} from '@antfu/utils';

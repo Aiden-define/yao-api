@@ -66,3 +66,12 @@ dubbo:
   registry:
     address: nacos://localhost:8848
 
+
+aliyun:
+  oss:
+    file:
+      endPoint: "oss-cn-beijing.aliyuncs.com"
+      keyid: "LTAI5t9Mzm5dLRdK2zPhPe56"
+      keysecret: "iOltG2bkmaVRCZ9o33ImzsDPH9eS2t"
+      #bucket可以在控制台创建，也可以使用java代码创建
+      bucketname: "logistics-back-pic"

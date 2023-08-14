@@ -32,6 +32,14 @@ export async function deleteInterfaceInfoUsingPOST(
   });
 }
 
+/** downloadSdk GET /api/interfaceInfo/downloadSdk */
+export async function downloadSdkUsingGET(options?: { [key: string]: any }) {
+  return request<any>('/api/interfaceInfo/downloadSdk', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
 /** getInterfaceInfoById GET /api/interfaceInfo/get */
 export async function getInterfaceInfoByIdUsingGET(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

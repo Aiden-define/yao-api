@@ -1,14 +1,15 @@
 import { PageContainer } from '@ant-design/pro-components';
 import React, { useEffect, useState } from 'react';
-import {Button, Card, Descriptions, Form, message, Input, Spin, Divider} from 'antd';
+import {Button, Card, Descriptions, Form, message, Input, Divider} from 'antd';
 import { useParams } from '@@/exports';
 import {
   getInterfaceInfoByIdUsingGET,
   invokeInterfaceUsingPOST
 } from "@/services/yaoapi-backend/interfaceInfoController";
 
+
 /**
- * 主页
+ * 接口
  * @constructor
  */
 const Index: React.FC = () => {
@@ -68,9 +69,9 @@ const Index: React.FC = () => {
             <Descriptions.Item label="描述">{data.description}</Descriptions.Item>
             <Descriptions.Item label="请求地址">{data.url}</Descriptions.Item>
             <Descriptions.Item label="请求方法">{data.method}</Descriptions.Item>
-            <Descriptions.Item label="请求参数">{data.requestParams}</Descriptions.Item>
-            <Descriptions.Item label="请求头">{data.requestHeader}</Descriptions.Item>
-            <Descriptions.Item label="响应头">{data.responseHeader}</Descriptions.Item>
+            <Descriptions.Item label="请求参数">{data.requestParams==null ? "无":data.requestParams}</Descriptions.Item>
+            <Descriptions.Item label="请求头">{data.requestHeader==null ? "无":data.requestHeader}</Descriptions.Item>
+            <Descriptions.Item label="响应头">{data.responseHeader==null ? "无":data.requestHeader}</Descriptions.Item>
             <Descriptions.Item label="创建时间">{data.createTime}</Descriptions.Item>
             <Descriptions.Item label="更新时间">{data.updateTime}</Descriptions.Item>
           </Descriptions>

@@ -1,8 +1,11 @@
 package com.yao.common.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
+
 /**
  * 用户视图
  *
@@ -43,7 +46,9 @@ public class UserVO implements Serializable {
     /**
      * 创建时间
      */
-   // private Date createTime;
+
+    @JsonFormat(shape= JsonFormat.Shape.STRING,pattern="yyyy-MM-dd",timezone="GMT+8")
+    private Date createTime;
 
     /**
      * 更新时间

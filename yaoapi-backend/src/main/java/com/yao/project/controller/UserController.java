@@ -10,12 +10,15 @@ import com.yao.project.common.ErrorCode;
 import com.yao.project.common.Result;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.model.dto.user.*;
+import com.yao.project.model.vo.UserKeyVO;
 import com.yao.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -186,14 +189,21 @@ public class UserController {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        //测试时发现密码更新时忘记重新加密，导致update后登录出现问题
-        String encryptPassword = DigestUtils.md5DigestAsHex(("yao" + userUpdateRequest.getUserPassword()).getBytes());
-        User user = new User();
-        BeanUtils.copyProperties(userUpdateRequest, user);
-        user.setUserPassword(encryptPassword);
-        boolean result = userService.updateById(user);
+
+
+        boolean result = userService.updateUser(userUpdateRequest,request);
         return Result.success(result);
     }
+
+    @PostMapping("/updateUserPic")
+    public Result<Boolean> updateUserPic(@RequestParam(required = false) MultipartFile file, HttpServletRequest request) {
+        if (file == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请选择上传图片");
+        }
+        boolean result = userService.updateUserPic(file,request);
+        return Result.success(result);
+    }
+
 
     /**
      * 根据 id 获取用户
@@ -260,6 +270,17 @@ public class UserController {
         }).collect(Collectors.toList());
         userVOPage.setRecords(userVOList);
         return Result.success(userVOPage);
+    }
+
+
+    @PostMapping("/resetUserKey")
+    public Result<UserKeyVO> resetUserKey(HttpServletRequest request){
+        return Result.success(userService.resetUserKey(request));
+    }
+
+    @PostMapping("/getUserKey")
+    public Result<UserKeyVO> getUserKey(HttpServletRequest request){
+        return Result.success(userService.getUserKey(request));
     }
 
 }

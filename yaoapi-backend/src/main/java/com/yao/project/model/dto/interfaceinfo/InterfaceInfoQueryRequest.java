@@ -16,8 +16,6 @@ import java.util.Date;
 @Data
 public class InterfaceInfoQueryRequest extends PageRequest implements Serializable {
 
-    private Long id;
-
     private String name;
 
     private String description;

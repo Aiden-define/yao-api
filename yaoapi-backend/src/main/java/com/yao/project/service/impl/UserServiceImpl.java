@@ -9,24 +9,24 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.vo.UserVO;
+import com.yao.project.common.AliyunOSSUtil;
 import com.yao.project.common.EmailUtils;
 import com.yao.project.common.ErrorCode;
 import com.yao.project.common.JwtUtils;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.UserMapper;
-import com.yao.project.model.dto.user.UserAddRequest;
 import com.yao.project.model.dto.user.UserLoginRequest;
 import com.yao.project.model.dto.user.UserRegisterRequest;
+import com.yao.project.model.dto.user.UserUpdateRequest;
 import com.yao.project.model.vo.UserKeyVO;
 import com.yao.project.service.UserService;
-import lombok.Data;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static com.yao.project.constant.UserConstant.*;
@@ -64,14 +63,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private static final String SALT = "yao";
 
     @Override
-    public long userRegister(UserRegisterRequest userRegisterRequest,HttpServletRequest request) {
+    public long userRegister(UserRegisterRequest userRegisterRequest, HttpServletRequest request) {
         String signature = request.getHeader("signature");
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         String urlNum = userRegisterRequest.getUrlNum();
         // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword,urlNum)) {
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, urlNum)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
         if (userAccount.length() < 4) {
@@ -81,12 +80,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
         }
         String urlNumRedis = stringRedisTemplate.opsForValue().get(NUMPIC_PREFIX + signature);
-        if(StringUtils.isEmpty(urlNumRedis)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"图片校验码失效，请刷新后重试");
+        if (StringUtils.isEmpty(urlNumRedis)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片校验码失效，请刷新后重试");
         }
         //这里的比较忽略大小写
-        if(!urlNumRedis.equalsIgnoreCase(urlNum)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"图片校验码输入有误");
+        if (!urlNumRedis.equalsIgnoreCase(urlNum)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片校验码输入有误");
         }
         // 密码和校验密码相同
         if (!userPassword.equals(checkPassword)) {
@@ -110,7 +109,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             user.setUserAccount(userAccount);
             user.setUserPassword(encryptPassword);
             user.setUserAvatar(USER_PIC);
-            user.setUserName("yapi"+userAccount.substring(0,5));
+            user.setUserName("yapi" + userAccount.substring(0, 5));
             user.setAccessKey(setUserKey().getAccessKey());
             user.setSecretKey(setUserKey().getSecretKey());
             boolean saveResult = this.save(user);
@@ -221,7 +220,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             createUser.setUserAvatar(USER_PIC);
             //取邮箱前面的数字为账号和密码
             String account = email.split("@")[0];
-            createUser.setUserName( "yapi"+account.substring(0,5));
+            createUser.setUserName("yapi" + account.substring(0, 5));
             createUser.setUserAccount(account);
             // 加密
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + account).getBytes());
@@ -237,15 +236,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return createUser;
     }
 
-    public UserKeyVO setUserKey() {
-        UserKeyVO userKeyVO = new UserKeyVO();
-        // 3. 分配ak,sk
-        String accessKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(10)).getBytes());
-        String secretKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(12)).getBytes());
-        userKeyVO.setAccessKey(accessKey);
-        userKeyVO.setSecretKey(secretKey);
-        return userKeyVO;
-    }
 
     @Override
     public boolean sendCode(String email) {
@@ -298,6 +288,63 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public UserKeyVO resetUserKey(HttpServletRequest request) {
+        // 先判断是否已登录
+        User loginUser = this.getLoginUser(request);
+
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        UserKeyVO userKeyVO = this.setUserKey();
+        loginUser.setAccessKey(userKeyVO.getAccessKey());
+        loginUser.setSecretKey(userKeyVO.getSecretKey());
+        int updateById = userMapper.updateById(loginUser);
+        if (updateById < 1) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "更新失败");
+        }
+        String userJson = new Gson().toJson(loginUser);
+        //缓存重置
+        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(), userJson, JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
+        return userKeyVO;
+    }
+
+    @Override
+    public UserKeyVO getUserKey(HttpServletRequest request) {
+        User loginUser = this.getLoginUser(request);
+        UserKeyVO userKeyVO = new UserKeyVO();
+        userKeyVO.setSecretKey(loginUser.getSecretKey());
+        userKeyVO.setAccessKey(loginUser.getAccessKey());
+        return userKeyVO;
+    }
+
+    @Override
+    public boolean updateUserPic(MultipartFile pic, HttpServletRequest request) {
+        User loginUser = this.getLoginUser(request);
+        String url = AliyunOSSUtil.OSSUploadFile(pic);
+        loginUser.setUserAvatar(url);
+        //更新缓存
+        String json = new Gson().toJson(loginUser);
+        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(),json,JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
+        return this.updateById(loginUser);
+
+    }
+
+    @Override
+    public boolean updateUser(UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
+        if(StringUtils.isBlank(userUpdateRequest.getUserName())){
+            throw new BusinessException(ErrorCode.NULL_ERROR,"参数不能为空");
+        }
+        User loginUser = this.getLoginUser(request);
+        loginUser.setGender(userUpdateRequest.getGender());
+        loginUser.setUserName(userUpdateRequest.getUserName());
+        userMapper.updateById(loginUser);
+        //更新缓存
+        String json = new Gson().toJson(loginUser);
+        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(),json,JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
+        return this.updateById(loginUser);
     }
 
     /**
@@ -365,6 +412,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 仅管理员可查询
         User loginUser = getLoginUser(request);
         return ADMIN_ROLE.equals(loginUser.getUserRole());
+    }
+
+    /**
+     * 设置用户的ak，sk
+     *
+     * @return
+     */
+    public UserKeyVO setUserKey() {
+        UserKeyVO userKeyVO = new UserKeyVO();
+        // 3. 分配ak,sk
+        String accessKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(10)).getBytes());
+        String secretKey = DigestUtils.md5DigestAsHex((SALT + RandomUtil.randomNumbers(12)).getBytes());
+        userKeyVO.setAccessKey(accessKey);
+        userKeyVO.setSecretKey(secretKey);
+        return userKeyVO;
     }
 
     /**
