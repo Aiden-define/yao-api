@@ -197,7 +197,7 @@ public class InterfaceInfoController {
         // todo 这是还只是模拟接口，之后需要根据用户调用接口动态选择
         com.yao.yaoapiclientsdk.model.User user = new com.yao.yaoapiclientsdk.model.User();
         user.setUsername("yjh");
-        String nameByPost = yaoApiClient.getUserNameByPost(user);
+        String nameByPost = yaoApiClient.getNameByPost(user);
         if(StringUtils.isBlank(nameByPost)){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"接口验证失败");
         }
@@ -239,28 +239,8 @@ public class InterfaceInfoController {
         if(interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() < 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long id = interfaceInfoInvokeRequest.getId();
-        String userRequestParams = interfaceInfoInvokeRequest.getUserRequestParams();
-        //判断接口是否存在
-        InterfaceInfo byId = interfaceInfoService.getById(id);
-        if(byId == null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-        }
-        InterfaceInfo infoServiceById = interfaceInfoService.getById(byId);
-        //接口是否开启
-        Integer status = infoServiceById.getStatus();
-        if(status == 0){
-            throw new BusinessException(ErrorCode.INTERFACE_CLOSE,"接口已关闭");
-        }
-        //通过密钥调用接口
-        User loginUser = userService.getLoginUser(request);
-        String accessKey = loginUser.getAccessKey();
-        String secretKey = loginUser.getSecretKey();
-        YaoApiClient apiClient = new YaoApiClient(accessKey, secretKey);
-        com.yao.yaoapiclientsdk.model.User user = JSONUtil.toBean(userRequestParams, com.yao.yaoapiclientsdk.model.User.class);
-        // 根据调用方法调用
-        String userNameByPost = apiClient.getUserNameByPost(user);
-        return Result.success(userNameByPost);
+        String returnString = interfaceInfoService.invokeInterface(interfaceInfoInvokeRequest,request);
+        return Result.success(returnString);
     }
 
 

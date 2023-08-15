@@ -72,6 +72,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String accessKey = headers.getFirst("accessKey");
         //传入的参数
         String body = headers.getFirst("body");
+
         //sign:把密钥和传入的值加密成一个签名
         String sign = headers.getFirst("sign");
         //随机数：防重放
@@ -104,12 +105,12 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if (timestamp!=null&&currentTime - Long.parseLong(timestamp) > 60 * 5) {
             return handleNoAuth(response);
         }
-        //从数据库中查出secretKey
-        String secretKey = user.getSecretKey();
-        String serverSign = SignUtils.getsign(accessKey, secretKey, body);
+        //从查出secretKey
+        /*String secretKey = user.getSecretKey();
+        String serverSign = SignUtils.getSign(body,accessKey, secretKey);
         if (sign!=null&&!sign.equals(serverSign)) {
             return handleNoAuth(response);
-        }
+        }*/
         //5. 请求的模拟接口是否存在
         //从数据库查询接口是否存在，一起请求方法是否匹配
         InterfaceInfo interfaceInfo = null;
@@ -171,7 +172,6 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                                 sb2.append("<--- {} {} \n");
                                 List<Object> rspArgs = new ArrayList<>();
                                 rspArgs.add(originalResponse.getStatusCode());
-                                //rspArgs.add(requestUrl);
                                 String data = new String(content, StandardCharsets.UTF_8);//data
                                 sb2.append(data);
                                 log.info(sb2.toString(), rspArgs.toArray());//log.info("<-- {} {}\n", originalResponse.getStatusCode(), data);

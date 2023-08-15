@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yao.common.model.entity.InterfaceInfo;
+import com.yao.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -41,4 +43,13 @@ public interface InterfaceInfoService extends IService<InterfaceInfo> {
      * @return queryWrapper
      */
     QueryWrapper<InterfaceInfo> addCondition(InterfaceInfo interfaceInfoQuery);
+
+    /**
+     * 调用接口
+     * @param interfaceInfoInvokeRequest
+     * @param request
+     * @return
+     */
+    String invokeInterface(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request);
+
 }

@@ -19,7 +19,6 @@ public class InterfaceInfoInvokeRequest implements Serializable {
      */
     private String userRequestParams;
 
-    private Integer status;
 
 
 }

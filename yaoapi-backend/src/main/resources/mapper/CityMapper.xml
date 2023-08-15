@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yao.project.mapper.CityMapper">
+
+    <resultMap id="BaseResultMap" type="com.yao.yaoapiclientsdk.model.City">
+            <result property="cityName" column="cityName" jdbcType="VARCHAR"/>
+            <result property="adcode" column="adcode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        cityName,adcode
+    </sql>
+</mapper>

@@ -1,5 +1,6 @@
 package com.yao.project.model.vo;
 
+import com.google.gson.Gson;
 import lombok.Data;
 
 /**
@@ -12,4 +13,5 @@ import lombok.Data;
 public class UserKeyVO {
     public String accessKey;
     private String secretKey;
+
 }

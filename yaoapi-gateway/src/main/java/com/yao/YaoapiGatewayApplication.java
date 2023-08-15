@@ -24,15 +24,5 @@ public class YaoapiGatewayApplication {
     public void doSayHello(String name){
         System.out.println(demoService.sayHello(name));
     }
-   /* 网关配置
-   @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-        return builder.routes()
-                .route("path_route", r -> r.path("/baidu")
-                        .uri("http://www.baidu.com"))
-                .route("host_route", r -> r.path("/yao")
-                        .uri("http://yupi.icu"))
-                .build();
-    }*/
 
 }

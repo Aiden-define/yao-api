@@ -52,8 +52,13 @@ const Index: React.FC = () => {
         id: params.id,
         ...values,
       });
+      if(res.code!==200){
+        message.error(res.description)
+      }else{
+        message.success('请求成功');
+      }
       setInvokeRes(res.data);
-      message.success('请求成功');
+
     } catch (error: any) {
       message.error('操作失败，' + error.message);
     }
@@ -69,7 +74,7 @@ const Index: React.FC = () => {
             <Descriptions.Item label="描述">{data.description}</Descriptions.Item>
             <Descriptions.Item label="请求地址">{data.url}</Descriptions.Item>
             <Descriptions.Item label="请求方法">{data.method}</Descriptions.Item>
-            <Descriptions.Item label="请求参数">{data.requestParams==null ? "无":data.requestParams}</Descriptions.Item>
+            <Descriptions.Item label="请求示例（参数）">{data.requestParams==null ? "无":data.requestParams}</Descriptions.Item>
             <Descriptions.Item label="请求头">{data.requestHeader==null ? "无":data.requestHeader}</Descriptions.Item>
             <Descriptions.Item label="响应头">{data.responseHeader==null ? "无":data.requestHeader}</Descriptions.Item>
             <Descriptions.Item label="创建时间">{data.createTime}</Descriptions.Item>
@@ -81,8 +86,8 @@ const Index: React.FC = () => {
       </Card>
       <Divider />
       <Card title="在线测试">
-        <Form name="invoke" layout="vertical" onFinish={onFinish}>
-          <Form.Item label="请求参数" name="userRequestParams">
+        <Form name="invoke" layout="vertical" onFinish={onFinish} >
+          <Form.Item label="请求示例（参数）" name="userRequestParams">
             <Input.TextArea />
           </Form.Item>
           <Form.Item wrapperCol={{ span: 16 }}>

@@ -175,7 +175,7 @@ const TableList: React.FC = () => {
             valueType: 'text'
         },
         {
-            title: '请求参数',
+            title: '请求参数(示例)',
             dataIndex: 'requestParams',
             valueType: 'text',
         },
@@ -214,7 +214,7 @@ const TableList: React.FC = () => {
             title: '操作',
             dataIndex: 'option',
             valueType: 'option',
-            render: (_, record, item ) => [
+            render: (_, record, ) => [
 
                 <Button
                     type="text"
