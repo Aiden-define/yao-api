@@ -3,7 +3,7 @@ package com.yao.yaoApiGateway;
 /**
  * @author DH
  * @version 1.0
- * @description TODO
+ * @description 接口调用的网关验证
  * @date 2023/5/11 16:55
  */
 
@@ -32,9 +32,12 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -55,6 +58,11 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String path = request.getPath().toString();
         log.info("请求唯一标识：" + request.getId());
         log.info("请求路径：" + path);
+        try {
+            log.info("请求body：" + URLDecoder.decode(Objects.requireNonNull(request.getHeaders().getFirst("body")), "utf-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         log.info("请求方法：" + request.getMethod());
         log.info("请求参数：" + request.getQueryParams());
         String sourceAddress = request.getLocalAddress().getHostString();
@@ -69,9 +77,17 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
         //4. 用户鉴权（判断ak、sk是否合法）
         HttpHeaders headers = request.getHeaders();
+        //Flux<DataBuffer> body1 = request.getBody();
+        //String r = body1.toString();
         String accessKey = headers.getFirst("accessKey");
         //传入的参数
-        String body = headers.getFirst("body");
+        String body1 = headers.getFirst("body");
+        String body = null;
+        try {
+            body = URLDecoder.decode(body1, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
 
         //sign:把密钥和传入的值加密成一个签名
         String sign = headers.getFirst("sign");
@@ -83,54 +99,46 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
          进行权限判断
          */
         //查询数据库判断是否发配给用户密钥
-        User user = null;
-        try {
-            user = innerUserService.getInvokeUser(accessKey);
-        } catch (Exception e) {
-            log.info("error:{}",e);
-        }
-        if(user == null){
+        User user = innerUserService.getInvokeUser(accessKey);
+
+        if (user == null) {
             return handleInvokeError(response);
         }
         Long userId = user.getId();
-        if (accessKey!=null&&!accessKey.equals(user.getAccessKey())) {
+        if (accessKey != null && !accessKey.equals(user.getAccessKey())) {
             return handleNoAuth(response);
         }
-        if (nonce!=null&&Long.parseLong(nonce) > 10000) {
+        if (nonce != null && Long.parseLong(nonce) > 10000) {
             return handleNoAuth(response);
         }
         //时间和当前时间应不超过5分钟
         /*if()*/
         long currentTime = System.currentTimeMillis() / 1000;
-        if (timestamp!=null&&currentTime - Long.parseLong(timestamp) > 60 * 5) {
+        if (timestamp != null && currentTime - Long.parseLong(timestamp) > 60 * 5) {
             return handleNoAuth(response);
         }
         //从查出secretKey
-        /*String secretKey = user.getSecretKey();
-        String serverSign = SignUtils.getSign(body,accessKey, secretKey);
-        if (sign!=null&&!sign.equals(serverSign)) {
+        String secretKey = user.getSecretKey();
+        String serverSign = SignUtils.getSign(body, accessKey, secretKey);
+        if (sign != null && !sign.equals(serverSign)) {
             return handleNoAuth(response);
-        }*/
+        }
         //5. 请求的模拟接口是否存在
         //从数据库查询接口是否存在，一起请求方法是否匹配
-        InterfaceInfo interfaceInfo = null;
-        try {
-            interfaceInfo = innerInterfaceInfoService.getInterfaceInfo("http://localhost:8888" + path, String.valueOf(request.getMethod()));
-        } catch (Exception e) {
-            log.info("error:{}",e);
-        }
-        if(interfaceInfo == null){
-            return handleInvokeError(response);
+        InterfaceInfo interfaceInfo = innerInterfaceInfoService.getInterfaceInfo("http://localhost:8888" + path, String.valueOf(request.getMethod()));
+        if (interfaceInfo == null) {
+            //404
+            return handleInvokeNotFound(response);
         }
         Long interfaceInfoId = interfaceInfo.getId();
         /*  请求转发，调用模拟接口
         Mono<Void> filter = chain.filter(exchange);*/
         //6.该用户是否还有调用次数
-        try {
-            boolean times = innerUserInterfaceInfoService.callTimes(interfaceInfoId, userId);
-            log.info("times:{}",times);
-        } catch (Exception e) {
-            log.error("调用次数获取:{}",e);
+
+        boolean times = innerUserInterfaceInfoService.callTimes(interfaceInfoId, userId);
+        //次数不足抛403，注意对接
+        if (!times) {
+            return handleInvokeForbidden(response);
         }
         //7. 响应日志
         log.info("custom global filter");
@@ -144,7 +152,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             DataBufferFactory bufferFactory = originalResponse.bufferFactory();
             //拿到响应码
             HttpStatus statusCode = originalResponse.getStatusCode();
-            log.info("status:{}",statusCode);
+            log.info("status:{}", statusCode);
             if (statusCode == HttpStatus.OK) {
                 //装饰，增强能力
                 ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
@@ -200,13 +208,36 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         return -1;
     }
 
+    /**
+     * 异常定义 （注意和调用方法的主后端对应好）
+     *
+     * @param response
+     * @return
+     */
+
     public Mono<Void> handleNoAuth(ServerHttpResponse response) {
-        response.setStatusCode(HttpStatus.FORBIDDEN);
+        response.setStatusCode(HttpStatus.BAD_REQUEST); //400
         return response.setComplete();
     }
 
     public Mono<Void> handleInvokeError(ServerHttpResponse response) {
         response.setStatusCode(HttpStatus.METHOD_NOT_ALLOWED);
+        return response.setComplete();
+    }
+
+    public Mono<Void> handleInvokeForbidden(ServerHttpResponse response) {
+        response.setStatusCode(HttpStatus.FORBIDDEN);
+        return response.setComplete();
+    }
+
+    /**
+     * 调用接口未找到
+     *
+     * @param response
+     * @return
+     */
+    public Mono<Void> handleInvokeNotFound(ServerHttpResponse response) {
+        response.setStatusCode(HttpStatus.NOT_FOUND);
         return response.setComplete();
     }
 }

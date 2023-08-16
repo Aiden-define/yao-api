@@ -86,7 +86,8 @@ const InfoCard: React.FC<{
 const Welcome: React.FC = () => {
   const { token } = theme.useToken();
   const { initialState } = useModel('@@initialState');
-  return (
+
+    return (
     <PageContainer>
       <Card
         style={{
@@ -94,6 +95,7 @@ const Welcome: React.FC = () => {
         }}
         bodyStyle={{
           backgroundImage:
+          // @ts-ignore
             initialState?.settings?.navTheme === 'realDark'
               ? 'background-image: linear-gradient(75deg, #1A1B1F 0%, #191C1F 100%)'
               : 'background-image: linear-gradient(75deg, #FBFDFF 0%, #F5F7FF 100%)',

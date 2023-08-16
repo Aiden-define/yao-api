@@ -7,9 +7,12 @@ import com.yao.yaoapiclientsdk.model.City;
 import com.yao.yaoapiinterface.entity.Lives;
 import com.yao.yaoapiinterface.entity.WeatherResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 
 /**
@@ -29,15 +32,19 @@ public class WeatherController {
     @PostMapping("/post")
     public String getWeatherByPost(@RequestBody City city) {
         String code = stringRedisTemplate.opsForValue().get("city:cache:" + city.getCityName());
+        if(code==null){
+            return "Error request: 70001";//请输入完整的参数
+
+        }
         String url = "https://restapi.amap.com/v3/weather/weatherInfo";
         String param = "?key="+key+"&city="+code;
         HttpRequest httpRequest = HttpRequest.get(url+param);
-        System.out.println(httpRequest);
+        //System.out.println(httpRequest);
         HttpResponse execute = httpRequest.execute();
         String body = execute.body();
         WeatherResponse weatherResponse = JSONUtil.toBean(body, WeatherResponse.class);
         if(Integer.parseInt(weatherResponse.getStatus())==0){
-            return "请求错误";
+            return "Error request: 70002";//获取数据失败
         }
         String firstString = body.split("\\[")[1];
         String substring = firstString.substring(0, firstString.length() - 2);

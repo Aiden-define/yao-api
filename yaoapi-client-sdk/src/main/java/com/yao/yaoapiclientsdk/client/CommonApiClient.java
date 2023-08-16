@@ -35,9 +35,12 @@ public class CommonApiClient {
      */
     protected static Map<String, String> getHeaders(String body,String accessKey,String secretKey) {
         Map<String, String> headMap = new HashMap<>();
-        headMap.put("Content-Type", "application/json;charset=UTF-8");
         headMap.put("accessKey", accessKey);
-        headMap.put("body", body);
+        try {
+            headMap.put("body", URLEncoder.encode(body,"UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         headMap.put("sign", SignUtils.getSign(body,accessKey, secretKey));
         headMap.put("nonce", RandomUtil.randomNumbers(4));
         headMap.put("timestamp", String.valueOf(System.currentTimeMillis() / 1000));

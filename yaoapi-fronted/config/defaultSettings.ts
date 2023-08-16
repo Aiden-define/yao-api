@@ -7,6 +7,8 @@ const Settings: ProLayoutProps & {
     pwa?: boolean;
     logo?: string;
 } = {
+
+
     siderMenuType: "sub",
     splitMenus: false,
     navTheme: 'light',
@@ -17,9 +19,9 @@ const Settings: ProLayoutProps & {
     fixedHeader: false,
     fixSiderbar: true,
     colorWeak: false,
-    title: 'yaoapi接口调用中心',
+    title: 'Y-API接口调用中心',
     pwa: true,
-    logo: 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
+    logo: '/logo.svg',
     iconfontUrl: '',
     token: {
         // 参见ts声明，demo 见文档，通过token 修改样式

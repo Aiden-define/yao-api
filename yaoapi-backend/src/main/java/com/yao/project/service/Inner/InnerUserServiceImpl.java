@@ -31,11 +31,8 @@ public class InnerUserServiceImpl implements InnerUserService {
     public User getInvokeUser(String accessKey) {
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.eq("accessKey", accessKey);
-        User user = userMapper.selectOne(userQueryWrapper);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-        }
-        return user;
+        //为null由网关抛状态码，由接口调用方法判断抛异常
+        return userMapper.selectOne(userQueryWrapper);
     }
 }
 

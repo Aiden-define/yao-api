@@ -1,20 +1,20 @@
 package com.yao.project.controller;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yao.common.model.entity.InterfaceInfo;
 import com.yao.common.model.entity.User;
-import com.yao.common.model.vo.UserVO;
+import com.yao.common.model.entity.UserInterfaceInfo;
 import com.yao.project.annotation.AuthCheck;
 import com.yao.project.common.*;
-import com.yao.project.constant.CommonConstant;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoAddRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
+import com.yao.project.model.vo.InterfaceInfoUserVO;
 import com.yao.project.service.InterfaceInfoService;
+import com.yao.project.service.UserInterfaceInfoService;
 import com.yao.project.service.UserService;
 import com.yao.yaoapiclientsdk.client.YaoApiClient;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +46,9 @@ public class InterfaceInfoController {
 
     @Resource
     private YaoApiClient yaoApiClient;
+
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
 
     // region 增删改查
     /**
@@ -140,12 +143,27 @@ public class InterfaceInfoController {
      * @return
      */
     @GetMapping("/get")
-    public Result<InterfaceInfo> getInterfaceInfoById(long id) {
+    public Result<InterfaceInfoUserVO> getInterfaceInfoById(long id,HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        InterfaceInfoUserVO interfaceInfoUserVO = new InterfaceInfoUserVO();
+
+        User loginUser = userService.getLoginUser(request);
         InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
-        return Result.success(interfaceInfo);
+        BeanUtils.copyProperties(interfaceInfo,interfaceInfoUserVO);
+        QueryWrapper<UserInterfaceInfo> infoQueryWrapper = new QueryWrapper<>();
+        infoQueryWrapper.eq("userId",loginUser.getId()).eq("interfaceInfoId",id);
+        UserInterfaceInfo userInterfaceInfo = userInterfaceInfoService.getOne(infoQueryWrapper);
+        if(userInterfaceInfo==null){
+          //说明该用户还没有该接口的调用次数
+            interfaceInfoUserVO.setTotalNum(0L);
+            interfaceInfoUserVO.setLeftNum(0);
+        }else {
+            interfaceInfoUserVO.setTotalNum(userInterfaceInfo.getTotalNum());
+            interfaceInfoUserVO.setLeftNum(userInterfaceInfo.getLeftNum());
+        }
+        return Result.success(interfaceInfoUserVO);
     }
 
     /**
@@ -172,7 +190,6 @@ public class InterfaceInfoController {
      * @return
      */
     @GetMapping("/list/page")
-    @AuthCheck(mustRole = "admin")
     public Result<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
         Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.listInterfaceInfoByPage(interfaceInfoQueryRequest);
         return Result.success(interfaceInfoPage);

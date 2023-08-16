@@ -32,7 +32,8 @@ public class InnerInterfaceInfoServiceImpl implements InnerInterfaceInfoService 
         queryWrapper.eq("url",url).eq("method",method);
         InterfaceInfo interfaceInfo = interfaceInfoMapper.selectOne(queryWrapper);
         if(interfaceInfo == null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            //throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+            return null;
         }
         return interfaceInfo;
     }

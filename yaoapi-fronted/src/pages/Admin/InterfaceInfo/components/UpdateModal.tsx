@@ -2,18 +2,18 @@ import type {ProColumns, ProFormInstance} from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import '@umijs/max';
 import { Modal } from 'antd';
-import React, {createRef, useEffect, useRef} from 'react';
+import React, { useEffect, useRef} from 'react';
 
 export type Props = {
     values: API.InterfaceInfo;
     columns: ProColumns<API.InterfaceInfo>[];
     onCancel: () => void;
     onSubmit: (values: API.InterfaceInfo) => Promise<void>;
-    visible: boolean;
+    open: boolean;
 };
 
 const UpdateModal: React.FC<Props> = (props) => {
-    const { values, visible, columns, onCancel, onSubmit } = props;
+    const { values, open, columns, onCancel, onSubmit } = props;
 
     const formRef = useRef<ProFormInstance>();
 
@@ -24,7 +24,7 @@ const UpdateModal: React.FC<Props> = (props) => {
     }, [values])
 
     return (
-        <Modal visible={visible} footer={null} onCancel={() => onCancel?.()}>
+        <Modal open={open} footer={null} onCancel={() => onCancel?.()}>
             <ProTable
                 type="form"
                 formRef={formRef}

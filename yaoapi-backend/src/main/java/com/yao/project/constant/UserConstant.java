@@ -11,7 +11,7 @@ public interface UserConstant {
     /**
      * 用户登录态键
      */
-    String USER_LOGIN_REDIS ="user:login:";
+    String USER_LOGIN_REDIS = "user:login:";
 
     /**
      * 系统用户 id（虚拟用户）
@@ -33,7 +33,7 @@ public interface UserConstant {
     /**
      * 邮箱校验码
      */
-    String EMAIL_REGEX ="^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$";
+    String EMAIL_REGEX = "^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$";
 
     /**
      * 发送的验证码长度
@@ -43,7 +43,7 @@ public interface UserConstant {
     /**
      * 用户验证码存入redis
      */
-    String  USER_CODE_REDIS = "user:code:";
+    String USER_CODE_REDIS = "user:code:";
 
     /**
      * 用户默认头像
@@ -54,6 +54,11 @@ public interface UserConstant {
      * 注册生成的验证码图
      */
     String NUMPIC_PREFIX = "number:pic:";
+
+    /**
+     * 用户拥有的接口
+     */
+    String USER_INTERFACE = "user:interface:";
 
 
 }

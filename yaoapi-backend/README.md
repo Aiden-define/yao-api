@@ -24,3 +24,5 @@ Java SpringBoot 项目初始模板，整合了常用框架和示例代码
 - 示例 SQL（用户表）
 
 访问 localhost:7529/api/doc.html 在线调试接口
+bt  default
+获取宝塔面板地址

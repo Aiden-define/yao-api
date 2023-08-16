@@ -20,16 +20,16 @@ public class UserInterfaceInfoAddRequest implements Serializable {
     /**
      * 接口总调用次数
      */
-    private Long totalNum;
+ //   private Long totalNum;
 
     /**
      * 剩余调用次数
      */
     private Integer leftNum;
 
-    /**
-     * 0-正常 1-禁止
-     */
-    private Integer status;
+//    /**
+//     * 0-正常 1-禁止
+//     */
+//    private Integer status;
 
 }

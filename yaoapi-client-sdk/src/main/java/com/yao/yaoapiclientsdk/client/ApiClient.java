@@ -1,6 +1,7 @@
 package com.yao.yaoapiclientsdk.client;
 
 import com.yao.yaoapiclientsdk.model.City;
+import com.yao.yaoapiclientsdk.model.UrlApi;
 import com.yao.yaoapiclientsdk.model.User;
 
 /**
@@ -19,8 +20,21 @@ public interface ApiClient {
 
     /**
      * 获取天气的接口
-     * @param code
+     * @param city
      * @return
      */
     String getWeatherByPost(City city);
+
+    /**
+     * 获取网页图标
+     * @param urlApi
+     * @return
+     */
+    String getFaviconByPost(UrlApi urlApi);
+
+    /**
+     * 每日一语
+     * @return
+     */
+    String getDailyContentByPost();
 }

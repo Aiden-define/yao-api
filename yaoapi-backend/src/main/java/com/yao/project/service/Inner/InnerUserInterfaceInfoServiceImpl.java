@@ -35,10 +35,12 @@ public class InnerUserInterfaceInfoServiceImpl implements InnerUserInterfaceInfo
         QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("interfaceInfoId", interfaceInfoId).eq("userId", userId);
         UserInterfaceInfo userInterfaceInfo = userInterfaceInfoMapper.selectOne(queryWrapper);
+        //返回false，由网关抛异常即可
         if (userInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"用户对该接口没有权限调用");
+            return false;
         }
-        return userInterfaceInfo.getLeftNum() > 0;
+        Integer leftNum = userInterfaceInfo.getLeftNum();
+        return leftNum > 0;
     }
 
 }

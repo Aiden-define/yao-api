@@ -1,1 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.yao.yaoapiclientsdk.YaoApiClientConfig
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.yao.yaoapiclientsdk.YaoApiClientConfig

@@ -6,6 +6,8 @@ import {
   getInterfaceInfoByIdUsingGET,
   invokeInterfaceUsingPOST
 } from "@/services/yaoapi-backend/interfaceInfoController";
+import {addUserInterfaceInfoUsingPOST} from "@/services/yaoapi-backend/userInterfaceInfoController";
+import {res} from "pino-std-serializers";
 
 
 /**
@@ -14,7 +16,7 @@ import {
  */
 const Index: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<API.InterfaceInfo>();
+  const [data, setData] = useState<API.InterfaceInfoUserVO>();
   const [invokeRes, setInvokeRes] = useState<any>();
   const [invokeLoading, setInvokeLoading] = useState(false);
 
@@ -36,6 +38,25 @@ const Index: React.FC = () => {
     }
     setLoading(false);
   };
+    const getInterfaceCount = async () => {
+      setInvokeLoading(true);
+      try {
+        const res = await addUserInterfaceInfoUsingPOST({
+          interfaceInfoId: data?.id,
+          leftNum: data?.leftNum,
+        });
+        if (res.data) {
+          message.success('获取调用次数成功');
+        } else {
+          message.error(res.description);
+        }
+      } catch (e:any) {
+        message.error('请求失败，' + e.message);
+      }
+      setInvokeLoading(false);
+      loadData();
+      return
+    };
 
   useEffect(() => {
     loadData();
@@ -63,20 +84,26 @@ const Index: React.FC = () => {
       message.error('操作失败，' + error.message);
     }
     setInvokeLoading(false);
+    loadData();
   };
 
   return (
     <PageContainer title="查看接口文档">
       <Card>
         {data ? (
-          <Descriptions title={data.name} column={1}>
+          <Descriptions title={data.name} column={1}  extra={
+            <Button onClick={getInterfaceCount}>获取接口次数</Button>
+          }>
             <Descriptions.Item label="接口状态">{data.status ? '开启' : '关闭'}</Descriptions.Item>
             <Descriptions.Item label="描述">{data.description}</Descriptions.Item>
+            <Descriptions.Item label="接口调用次数">{data.totalNum}</Descriptions.Item>
+            <Descriptions.Item label="剩余调用次数">{data.leftNum}</Descriptions.Item>
+            <Descriptions.Item label="请求地址">{data.url}</Descriptions.Item>
             <Descriptions.Item label="请求地址">{data.url}</Descriptions.Item>
             <Descriptions.Item label="请求方法">{data.method}</Descriptions.Item>
-            <Descriptions.Item label="请求示例（参数）">{data.requestParams==null ? "无":data.requestParams}</Descriptions.Item>
-            <Descriptions.Item label="请求头">{data.requestHeader==null ? "无":data.requestHeader}</Descriptions.Item>
-            <Descriptions.Item label="响应头">{data.responseHeader==null ? "无":data.requestHeader}</Descriptions.Item>
+            <Descriptions.Item label="请求示例（参数）">{data.requestParams===null ? "无":data.requestParams}</Descriptions.Item>
+            <Descriptions.Item label="请求头">{data.requestHeader===null ? '无':data.requestHeader}</Descriptions.Item>
+            <Descriptions.Item label="响应头">{data.responseHeader===null ? "无":data.requestHeader}</Descriptions.Item>
             <Descriptions.Item label="创建时间">{data.createTime}</Descriptions.Item>
             <Descriptions.Item label="更新时间">{data.updateTime}</Descriptions.Item>
           </Descriptions>

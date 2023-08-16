@@ -1,6 +1,7 @@
 package com.yao.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.entity.UserInterfaceInfo;
@@ -44,40 +45,25 @@ public class UserInterfaceInfoController {
     // region 增删改查
 
     /**
-     * 增
+     * 增加接口次数或更新接口调用次数
+     *
      * @param userInterfaceInfoAddRequest
      * @param request
      * @return
      */
     @PostMapping("/add")
-    @AuthCheck(mustRole = "admin")
-    public Result<Long> addUserInterfaceInfo(@RequestBody UserInterfaceInfoAddRequest userInterfaceInfoAddRequest, HttpServletRequest request) {
+    public Result<Boolean> addUserInterfaceInfo(@RequestBody UserInterfaceInfoAddRequest userInterfaceInfoAddRequest, HttpServletRequest request) {
         if (userInterfaceInfoAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        UserInterfaceInfo userInterfaceInfo = new UserInterfaceInfo();
-        BeanUtils.copyProperties(userInterfaceInfoAddRequest, userInterfaceInfo);
-        // 校验
-        User loginUser = userService.getLoginUser(request);
-        userInterfaceInfo.setUserId(loginUser.getId());
-        userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, true);
-        boolean result = false;
-        try {
-            result = userInterfaceInfoService.save(userInterfaceInfo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.info("出错：{}",e);
-        }
-        if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
-        }
-        long newUserInterfaceInfoId = userInterfaceInfo.getId();
+        Boolean update = userInterfaceInfoService.addUserInterfaceInfo(userInterfaceInfoAddRequest,request);
         //返回id
-        return Result.success(newUserInterfaceInfoId);
+        return Result.success(update);
     }
 
     /**
      * 删除
+     *
      * @param deleteRequest
      * @param request
      * @return
@@ -113,14 +99,14 @@ public class UserInterfaceInfoController {
     @PostMapping("/update")
     @AuthCheck(mustRole = "admin")
     public Result<Boolean> updateUserInterfaceInfo(@RequestBody UserInterfaceInfoUpdateRequest userInterfaceInfoUpdateRequest,
-                                            HttpServletRequest request) {
+                                                   HttpServletRequest request) {
         if (userInterfaceInfoUpdateRequest == null || userInterfaceInfoUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         UserInterfaceInfo userInterfaceInfo = new UserInterfaceInfo();
         BeanUtils.copyProperties(userInterfaceInfoUpdateRequest, userInterfaceInfo);
         // 参数校验
-        userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, false);
+        //userInterfaceInfoService.validUserInterfaceInfo(userInterfaceInfo, false);
         User loginUser = userService.getLoginUser(request);
         long id = userInterfaceInfoUpdateRequest.getId();
         // 判断是否存在
@@ -168,8 +154,10 @@ public class UserInterfaceInfoController {
         List<UserInterfaceInfo> userInterfaceInfoList = userInterfaceInfoService.list(queryWrapper);
         return Result.success(userInterfaceInfoList);
     }
+
     /**
      * 分页获取列表
+     *
      * @return
      */
     @GetMapping("/list/page")

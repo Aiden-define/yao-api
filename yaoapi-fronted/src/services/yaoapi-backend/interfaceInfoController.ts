@@ -46,7 +46,7 @@ export async function getInterfaceInfoByIdUsingGET(
   params: API.getInterfaceInfoByIdUsingGETParams,
   options?: { [key: string]: any },
 ) {
-  return request<API.ResultInterfaceInfo>('/api/interfaceInfo/get', {
+  return request<API.ResultInterfaceInfoUserVO>('/api/interfaceInfo/get', {
     method: 'GET',
     params: {
       ...params,

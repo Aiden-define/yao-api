@@ -171,8 +171,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         //如果接口有参数，但调用未传，报错
         String requestParams = interfaceInfo.getRequestParams();
-        if (requestParams != null) {
-            if (userRequestParams == null) {
+        if (StringUtils.isNotBlank(requestParams)) {
+            if (StringUtils.isBlank(userRequestParams)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "请输入参数");
             }
         }
@@ -184,17 +184,37 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         YaoApiClient apiClient = new YaoApiClient(accessKey, secretKey);
         //动态调用接口,反射实现
         String name = interfaceInfo.getName();
-        Object object;
+        Object object = null;
         try {
             object = confirmInterfaceMethodAndInvoke(name, userRequestParams, apiClient);
-            if (object == null) {
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口方法未找到，请确保参数正确");
-            }
         } catch (Exception e) {
-            log.error(String.valueOf(e));
+            throw  new BusinessException(ErrorCode.INTERFACE_ERROR,"接口调用出错");
+        }
+        //对返回数据校验
+        catchErrorCode(object);
+        return String.valueOf(object);
+    }
+
+    private void catchErrorCode(Object object) {
+        if (object.toString().contains("Error request, response status: 400")) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口校验出错");
+        }
+        if (object.toString().contains("Error request, response status: 403")) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "调用次数不足，请先获取调用次数");
+        }
+        if(object.toString().contains("Error request, response status: 404")){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口不存在");
+        }
+        if(object.toString().contains("Error request: 70001")){
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "参数有误");
         }
-        return String.valueOf(object);
+        if(object.toString().contains("Error request: 70002")){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取数据失败");
+        }
+        if(object.toString().contains("Error request: 70003")){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "该页面无法获取图标，换个页面试试");
+        }
+
     }
 
     private Object confirmInterfaceMethodAndInvoke(String name, String userRequestParams, YaoApiClient yaoApiClient) throws Exception {
@@ -216,7 +236,6 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
                 break;
             }
         }
-
         return object;
 
     }

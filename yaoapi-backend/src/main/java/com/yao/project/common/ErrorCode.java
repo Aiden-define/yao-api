@@ -11,7 +11,8 @@ public enum ErrorCode {
     SYSTEM_ERROR(50000,"系统错误",""),
     OPERATION_ERROR(50001, "操作失败",""),
     INTERFACE_CLOSE(50002, "接口未开启",""),
-    REDIS_ERROR(99999, "Redis错误","");
+    REDIS_ERROR(99999, "Redis错误",""),
+    INTERFACE_ERROR(50003, "接口异常","");
 
 
     private final int code;

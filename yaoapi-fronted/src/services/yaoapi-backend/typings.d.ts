@@ -50,7 +50,6 @@ declare namespace API {
 
   type InterfaceInfoInvokeRequest = {
     id?: number;
-    status?: number;
     userRequestParams?: string;
   };
 
@@ -64,6 +63,24 @@ declare namespace API {
     responseHeader?: string;
     status?: number;
     url?: string;
+  };
+
+  type InterfaceInfoUserVO = {
+    createTime?: string;
+    description?: string;
+    id?: number;
+    isDelete?: number;
+    leftNum?: number;
+    method?: string;
+    name?: string;
+    requestHeader?: string;
+    requestParams?: string;
+    responseHeader?: string;
+    status?: number;
+    totalNum?: number;
+    updateTime?: string;
+    url?: string;
+    userId?: number;
   };
 
   type InterfaceInfoVo = {
@@ -302,9 +319,9 @@ declare namespace API {
     message?: string;
   };
 
-  type ResultInterfaceInfo = {
+  type ResultInterfaceInfoUserVO = {
     code?: number;
-    data?: InterfaceInfo;
+    data?: InterfaceInfoUserVO;
     description?: string;
     message?: string;
   };
@@ -414,8 +431,6 @@ declare namespace API {
   type UserInterfaceInfoAddRequest = {
     interfaceInfoId?: number;
     leftNum?: number;
-    status?: number;
-    totalNum?: number;
   };
 
   type UserInterfaceInfoUpdateRequest = {
