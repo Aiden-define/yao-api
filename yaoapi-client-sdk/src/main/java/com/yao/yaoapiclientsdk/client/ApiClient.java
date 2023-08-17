@@ -19,7 +19,7 @@ public interface ApiClient {
     String getNameByPost(User user);
 
     /**
-     * 获取天气的接口
+     * 获取天气
      * @param city
      * @return
      */

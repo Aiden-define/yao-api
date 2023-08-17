@@ -8,12 +8,15 @@ import com.google.gson.Gson;
 import com.yao.common.model.entity.InterfaceInfo;
 import com.yao.common.model.entity.User;
 import com.yao.project.common.ErrorCode;
+import com.yao.project.common.IdRequest;
 import com.yao.project.constant.CommonConstant;
 import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.InterfaceInfoMapper;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
+import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import com.yao.project.service.InterfaceInfoService;
+import com.yao.project.service.UserInterfaceInfoService;
 import com.yao.project.service.UserService;
 import com.yao.yaoapiclientsdk.client.ApiClient;
 import com.yao.yaoapiclientsdk.client.CommonApiClient;
@@ -47,6 +50,9 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Resource
     private UserService userService;
 
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
+
     //数据校验
     @Override
     public void validInterfaceInfo(InterfaceInfo interfaceInfo, boolean add) {
@@ -62,7 +68,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         // 创建时，所有参数必须非空
         if (add) {
             if (StringUtils.isAnyBlank(name, description, url, requestHeader, responseHeader, method)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "所有参数不能为空");
             }
         }
         if (StringUtils.isNotBlank(name) && name.length() > 50) {
@@ -155,6 +161,48 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
     }
 
+
+    @Override
+    public Boolean interfaceOnLine(IdRequest idRequest, HttpServletRequest request) {
+        Long id = idRequest.getId();
+        //判断id是否存在
+        InterfaceInfo interfaceInfo = this.getById(id);
+        if (interfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        //判断该接口是否可以调用，只有尝试调用没有问题才可以上线
+        //先调用获取接口次数的接口
+        UserInterfaceInfoAddRequest userInterfaceInfoAddRequest = new UserInterfaceInfoAddRequest();
+        userInterfaceInfoAddRequest.setInterfaceInfoId(id);
+        userInterfaceInfoAddRequest.setLeftNum(0);
+        Boolean aBoolean = userInterfaceInfoService.addUserInterfaceInfo(userInterfaceInfoAddRequest, request);
+        if (!aBoolean) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取模拟请求次数失败");
+        }
+        User loginUser = userService.getLoginUser(request);
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+        //尝试调用接口
+        Object object = null;
+        try {
+            object = confirmInterfaceMethodAndInvoke(interfaceInfo.getName(), interfaceInfo.getRequestParams(), new YaoApiClient(accessKey, secretKey));
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INTERFACE_ERROR, "接口调用出错");
+        }
+        if(object==null){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口模拟调用失败");
+        }
+        if (StringUtils.isBlank(object.toString())) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口模拟调用失败");
+        }
+        //对返回数据校验
+        catchErrorCode(object);
+        //仅仅管理员可以进行修改
+        interfaceInfo.setId(id);
+        interfaceInfo.setStatus(1);
+        return this.updateById(interfaceInfo);
+    }
+
     @Override
     public String invokeInterface(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
         Long id = interfaceInfoInvokeRequest.getId();
@@ -188,12 +236,13 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         try {
             object = confirmInterfaceMethodAndInvoke(name, userRequestParams, apiClient);
         } catch (Exception e) {
-            throw  new BusinessException(ErrorCode.INTERFACE_ERROR,"接口调用出错");
+            throw new BusinessException(ErrorCode.INTERFACE_ERROR, "接口调用出错");
         }
         //对返回数据校验
         catchErrorCode(object);
         return String.valueOf(object);
     }
+
 
     private void catchErrorCode(Object object) {
         if (object.toString().contains("Error request, response status: 400")) {
@@ -202,16 +251,16 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (object.toString().contains("Error request, response status: 403")) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "调用次数不足，请先获取调用次数");
         }
-        if(object.toString().contains("Error request, response status: 404")){
+        if (object.toString().contains("Error request, response status: 404")) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口不存在");
         }
-        if(object.toString().contains("Error request: 70001")){
+        if (object.toString().contains("Error request: 70001")) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "参数有误");
         }
-        if(object.toString().contains("Error request: 70002")){
+        if (object.toString().contains("Error request: 70002")) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取数据失败");
         }
-        if(object.toString().contains("Error request: 70003")){
+        if (object.toString().contains("Error request: 70003")) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "该页面无法获取图标，换个页面试试");
         }
 

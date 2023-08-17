@@ -45,12 +45,7 @@ public class InterfaceInfoController {
     private UserService userService;
 
     @Resource
-    private YaoApiClient yaoApiClient;
-
-    @Resource
     private UserInterfaceInfoService userInterfaceInfoService;
-
-    // region 增删改查
     /**
      * 增
      * @param interfaceInfoAddRequest
@@ -60,7 +55,7 @@ public class InterfaceInfoController {
     @PostMapping("/add")
     public Result<Long> addInterfaceInfo(@RequestBody InterfaceInfoAddRequest interfaceInfoAddRequest, HttpServletRequest request) {
         if (interfaceInfoAddRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请输入完整参数");
         }
         InterfaceInfo interfaceInfo = new InterfaceInfo();
         BeanUtils.copyProperties(interfaceInfoAddRequest, interfaceInfo);
@@ -70,7 +65,7 @@ public class InterfaceInfoController {
         interfaceInfo.setUserId(loginUser.getId());
         boolean result = interfaceInfoService.save(interfaceInfo);
         if (!result) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"添加失败");
         }
         long newInterfaceInfoId = interfaceInfo.getId();
         //返回id
@@ -200,29 +195,11 @@ public class InterfaceInfoController {
      */
     @AuthCheck(mustRole = "admin")
     @PostMapping("/onLine")
-    public Result<Boolean> interfaceOnLine(@RequestBody IdRequest idRequest){
+    public Result<Boolean> interfaceOnLine(@RequestBody IdRequest idRequest,HttpServletRequest request){
         if(idRequest == null || idRequest.getId() < 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long id = idRequest.getId();
-        //判断id是否存在
-        InterfaceInfo byId = interfaceInfoService.getById(id);
-        if(byId == null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-        }
-        //判断该接口是否可以调用，只有尝试调用没有问题才可以上线
-        // todo 这是还只是模拟接口，之后需要根据用户调用接口动态选择
-        com.yao.yaoapiclientsdk.model.User user = new com.yao.yaoapiclientsdk.model.User();
-        user.setUsername("yjh");
-        String nameByPost = yaoApiClient.getNameByPost(user);
-        if(StringUtils.isBlank(nameByPost)){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"接口验证失败");
-        }
-        //仅仅本人或者管理员可以进行修改
-        InterfaceInfo interfaceInfo = new InterfaceInfo();
-        interfaceInfo.setId(id);
-        interfaceInfo.setStatus(1);
-        boolean updateById = interfaceInfoService.updateById(interfaceInfo);
+        Boolean updateById = interfaceInfoService.interfaceOnLine(idRequest,request);
         return Result.success(updateById);
     }
     /**

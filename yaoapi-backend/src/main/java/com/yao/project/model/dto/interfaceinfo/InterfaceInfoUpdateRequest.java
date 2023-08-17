@@ -30,7 +30,6 @@ public class InterfaceInfoUpdateRequest implements Serializable {
 
     private String responseHeader;
 
-    private Integer status;
 
     private String method;
 

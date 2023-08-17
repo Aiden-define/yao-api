@@ -118,7 +118,7 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         User loginUser = userService.getLoginUser(request);
         userInterfaceInfo.setUserId(loginUser.getId());
         Integer leftNum = userInterfaceInfo.getLeftNum();
-        if (leftNum >= 50) {
+        if (leftNum >= 500) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口调用次数暂时充足，请用完再获取");
         }
         this.validUserInterfaceInfo(userInterfaceInfo);
