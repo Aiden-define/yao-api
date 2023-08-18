@@ -1,4 +1,5 @@
 package com.yao.project.common;
+import com.yao.project.exception.BusinessException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.apache.commons.lang3.StringUtils;
@@ -82,6 +83,9 @@ public class JwtUtils {
      */
     public static Long getUserIdByToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
+        if(cookies == null){
+            throw new BusinessException(ErrorCode.NULL_ERROR,"请求未带Cookies");
+        }
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals("token")) {
                 String token = cookie.getValue();

@@ -1,14 +1,15 @@
 import Footer from '@/components/Footer';
-import { Question } from '@/components/RightContent';
-import { LinkOutlined } from '@ant-design/icons';
-import { SettingDrawer } from '@ant-design/pro-components';
-import type { RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
-import { requestConfig } from './requestConfig';
+import {Question} from '@/components/RightContent';
+import {LinkOutlined} from '@ant-design/icons';
+import {SettingDrawer} from '@ant-design/pro-components';
+import type {RunTimeLayoutConfig} from '@umijs/max';
+import {history, Link} from '@umijs/max';
+import {requestConfig} from './requestConfig';
 import React from 'react';
-import { AvatarDropdown, AvatarName } from './components/RightContent/AvatarDropdown';
-import { getLoginUserUsingGET } from '@/services/yaoapi-backend/userController';
+import {AvatarDropdown, AvatarName} from './components/RightContent/AvatarDropdown';
+import {getLoginUserUsingGET} from '@/services/yaoapi-backend/userController';
 import Settings from "../config/defaultSettings";
+
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 
@@ -22,8 +23,8 @@ export async function getInitialState(): Promise<InitialState> {
   };
   try {
     const res = await getLoginUserUsingGET();
-    console.log(res);
-    if (res.data) {
+    //console.log(res);
+    if (res.code === 200) {
       state.loginUser = res.data;
     }
   } catch (error) {
@@ -33,12 +34,12 @@ export async function getInitialState(): Promise<InitialState> {
 }
 
 // 页面初始化的头像，水印等
-export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => {
   return {
-    actionsRender: () => [<Question key="doc" />],
+    actionsRender: () => [<Question key="doc"/>],
     avatarProps: {
       src: initialState?.loginUser?.userAvatar,
-      title: <AvatarName />,
+      title: <AvatarName/>,
       render: (_, avatarChildren) => {
         return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
       },
@@ -46,9 +47,9 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     waterMarkProps: {
       content: initialState?.loginUser?.userName,
     },
-    footerRender: () => <Footer />,
+    footerRender: () => <Footer/>,
     onPageChange: () => {
-      const { location } = history;
+      const {location} = history;
       // 如果没有登录，重定向到 login
       if (!initialState?.loginUser && location.pathname !== loginPath) {
         history.push(loginPath);
@@ -76,11 +77,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     ],
     links: isDev
       ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>OpenAPI 文档</span>
-          </Link>,
-        ]
+        <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
+          <LinkOutlined/>
+          <span>OpenAPI 文档</span>
+        </Link>,
+      ]
       : [],
     menuHeaderRender: undefined,
     // 自定义 403 页面
@@ -95,7 +96,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           <SettingDrawer
             disableUrlParams
             enableDarkTheme
-              // @ts-ignore
+            // @ts-ignore
             settings={Settings}
             onSettingChange={(settings) => {
               setInitialState((preInitialState) => ({

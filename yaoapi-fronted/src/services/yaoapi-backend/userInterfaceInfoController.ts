@@ -7,7 +7,7 @@ export async function addUserInterfaceInfoUsingPOST(
   body: API.UserInterfaceInfoAddRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.Resultlong>('/api/userInterfaceInfo/add', {
+  return request<API.Resultboolean>('/api/userInterfaceInfo/add', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -16,7 +16,7 @@ class YaoapiInterfaceApplicationTests {
     void test() {
         User user = new User();
         user.setUsername("yjh");
-        String post = yaoApiClient.getUserNameByPost(user);
+        String post = yaoApiClient.getNameByPost(user);
         System.out.println(post);
     }
 

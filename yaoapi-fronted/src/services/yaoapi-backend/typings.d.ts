@@ -61,7 +61,6 @@ declare namespace API {
     requestHeader?: string;
     requestParams?: string;
     responseHeader?: string;
-    status?: number;
     url?: string;
   };
 

@@ -38,7 +38,7 @@ const LoginMessage: React.FC<{
 };
 
 const Login: React.FC = () => {
-  const [userLoginState,] = useState<API.LoginResult>({});
+  const [userLoginState,setUserLoginState] = useState<API.LoginResult>({});
   const [type, setType] = useState<string>('account');
   const {setInitialState} = useModel('@@initialState');
   const containerClassName = useEmotionCss(() => {
@@ -69,14 +69,18 @@ const Login: React.FC = () => {
       //规定的返回状态为200登录成功
       if (res.code===200) {
         // 设置用户状态
-        setInitialState({
+        await setInitialState({
           loginUser: res.data,
         });
-        // setTimeout解决2次登录跳转问题
+        //setTimeout解决2次登录跳转问题
         setTimeout(() => {
           const urlParams = new URL(window.location.href).searchParams;
           history.push(urlParams.get('redirect') || '/');
         }, 10);
+        // @ts-ignore
+       /* setUserLoginState(res.data);
+        const urlParams = new URL(window.location.href).searchParams;
+        history.push(urlParams.get('redirect') || '/');*/
         return;
       }else{
         message.error(res.description)
