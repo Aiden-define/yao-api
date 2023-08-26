@@ -2,6 +2,18 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
+/** addUser POST /api/user/add */
+export async function addUserUsingPOST(body: API.UserAddRequest, options?: { [key: string]: any }) {
+  return request<API.Resultlong>('/api/user/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** deleteUser POST /api/user/delete */
 export async function deleteUserUsingPOST(
   body: API.DeleteRequest,
@@ -168,6 +180,21 @@ export async function updateUserUsingPOST(
   options?: { [key: string]: any },
 ) {
   return request<API.Resultboolean>('/api/user/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** updateUserByAdmin POST /api/user/updateByAdmin */
+export async function updateUserByAdminUsingPOST(
+  body: API.UserVO,
+  options?: { [key: string]: any },
+) {
+  return request<API.Resultboolean>('/api/user/updateByAdmin', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

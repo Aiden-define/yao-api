@@ -1,7 +1,7 @@
-package com.yao.project.exception;
+package com.yao.common.exception;
 
 
-import com.yao.project.common.ErrorCode;
+import com.yao.common.commonUtils.ErrorCode;
 
 /**
  * 自定义异常类

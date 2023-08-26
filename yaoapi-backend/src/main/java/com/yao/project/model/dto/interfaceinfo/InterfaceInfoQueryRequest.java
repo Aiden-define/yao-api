@@ -1,11 +1,10 @@
 package com.yao.project.model.dto.interfaceinfo;
 
-import com.yao.project.common.PageRequest;
+import com.yao.common.commonUtils.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * 查询请求

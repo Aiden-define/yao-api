@@ -1,5 +1,6 @@
 package com.yao.project.config;
 
+import cn.hutool.http.server.HttpServerRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;

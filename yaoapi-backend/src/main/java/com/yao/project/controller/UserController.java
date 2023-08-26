@@ -3,20 +3,20 @@ package com.yao.project.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
+import com.yao.common.commonUtils.DeleteRequest;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.commonUtils.Result;
+import com.yao.common.exception.BusinessException;
+import com.yao.common.model.entity.InterfaceInfo;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.vo.UserVO;
-import com.yao.project.common.DeleteRequest;
-import com.yao.project.common.ErrorCode;
-import com.yao.project.common.Result;
-import com.yao.project.exception.BusinessException;
+import com.yao.project.annotation.AuthCheck;
 import com.yao.project.model.dto.user.*;
 import com.yao.project.model.vo.UserKeyVO;
 import com.yao.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.MutablePropertyValues;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,7 +47,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/register")
-    public Result<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest,HttpServletRequest httpServletRequest) {
+    public Result<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest, HttpServletRequest httpServletRequest) {
         if (userRegisterRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -150,16 +150,15 @@ public class UserController {
      * 创建用户
      *
      * @param userAddRequest 添加封装类
-     * @param request  request
      * @return 用户id
      */
-   /* @PostMapping("/add")
-    public Result<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
+    @PostMapping("/add")
+    public Result<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
         if (userAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         return Result.success(userService.userAdd(userAddRequest));
-    }*/
+    }
 
     /**
      * 删除用户
@@ -192,6 +191,22 @@ public class UserController {
 
 
         boolean result = userService.updateUser(userUpdateRequest,request);
+        return Result.success(result);
+    }
+
+    /**
+     * 更新用户
+     *
+     * @param userVO
+     * @return
+     */
+    @PostMapping("/updateByAdmin")
+    @AuthCheck(mustRole = "admin")
+    public Result<Boolean> updateUserByAdmin(@RequestBody UserVO userVO) {
+        if (userVO == null || userVO.getId() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean result = userService.updateUserByAdmin(userVO);
         return Result.success(result);
     }
 
@@ -252,23 +267,7 @@ public class UserController {
      */
     @GetMapping("/list/page")
     public Result<Page<UserVO>> listUserByPage(UserQueryRequest userQueryRequest) {
-        long current = 1;
-        long size = 5;
-        User userQuery = new User();
-        if (userQueryRequest != null) {
-            BeanUtils.copyProperties(userQueryRequest, userQuery);
-            current = userQueryRequest.getCurrent();
-            size = userQueryRequest.getPageSize();
-        }
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>(userQuery);
-        Page<User> userPage = userService.page(new Page<>(current, size), queryWrapper);
-        Page<UserVO> userVOPage = new PageDTO<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
-        List<UserVO> userVOList = userPage.getRecords().stream().map(user -> {
-            UserVO userVO = new UserVO();
-            BeanUtils.copyProperties(user, userVO);
-            return userVO;
-        }).collect(Collectors.toList());
-        userVOPage.setRecords(userVOList);
+        Page<UserVO> userVOPage = userService.listUserByPage(userQueryRequest);
         return Result.success(userVOPage);
     }
 

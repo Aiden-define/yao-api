@@ -1,7 +1,5 @@
 package com.yao.yaoapiclientsdk;
 
-
-import com.yao.yaoapiclientsdk.client.CommonApiClient;
 import com.yao.yaoapiclientsdk.client.YaoApiClient;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * @date 2023/5/1 20:57
  */
 @Configuration
-@ConfigurationProperties("yao.api")
+@ConfigurationProperties("yaoapi.client")
 @Data
 @ComponentScan
 public class YaoApiClientConfig {

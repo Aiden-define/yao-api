@@ -5,19 +5,19 @@ import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.captcha.generator.RandomGenerator;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.commonUtils.JwtUtils;
+import com.yao.common.exception.BusinessException;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.vo.UserVO;
 import com.yao.project.common.AliyunOSSUtil;
 import com.yao.project.common.EmailUtils;
-import com.yao.project.common.ErrorCode;
-import com.yao.project.common.JwtUtils;
-import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.UserMapper;
-import com.yao.project.model.dto.user.UserLoginRequest;
-import com.yao.project.model.dto.user.UserRegisterRequest;
-import com.yao.project.model.dto.user.UserUpdateRequest;
+import com.yao.project.model.dto.user.*;
 import com.yao.project.model.vo.UserKeyVO;
 import com.yao.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +34,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static com.yao.project.constant.UserConstant.*;
-import static com.yao.project.constant.UserConstant.CODE_LENGTH;
+import static com.yao.common.constant.UserConstant.*;
 
 
 /**
@@ -93,48 +95,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         synchronized (userAccount.intern()) {
-            // 账户不能重复
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("userAccount", userAccount);
-            long count = userMapper.selectCount(queryWrapper);
-            if (count > 0) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已注册过啦");
-            }
-            // 2. 加密
-            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 分配ak,sk
-            this.setUserKey();
-            // 3. 插入数据
-            User user = new User();
-            user.setUserAccount(userAccount);
-            user.setUserPassword(encryptPassword);
-            user.setUserAvatar(USER_PIC);
-            user.setUserName("yapi" + userAccount.substring(0, 5));
-            user.setAccessKey(setUserKey().getAccessKey());
-            user.setSecretKey(setUserKey().getSecretKey());
-            boolean saveResult = this.save(user);
-            if (!saveResult) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
-            }
-            return user.getId();
+            return userRegisterDetails(userAccount, userPassword);
         }
 
     }
 
-/*    @Override
-    public long userAdd(UserAddRequest userAddRequest) {
-        long userAdd = userRegister(userAddRequest.getUserAccount(), userAddRequest.getUserPassword(), userAddRequest.getUserPassword());
+    private Long userRegisterDetails(String userAccount, String userPassword) {
+        // 账户不能重复
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        long count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已注册过啦");
+        }
+        // 2. 加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        // 3. 分配ak,sk
+        this.setUserKey();
+        // 3. 插入数据
         User user = new User();
-        user.setId(userAdd);
-        //加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userAddRequest.getUserPassword()).getBytes());
-        //赋值
-        BeanUtils.copyProperties(userAddRequest, user);
+        user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
-        //更新
-        userMapper.updateById(user);
-        return userAdd;
-    }*/
+        user.setUserAvatar(USER_PIC);
+        user.setUserName("yapi" + userAccount.substring(0, 5));
+        user.setAccessKey(setUserKey().getAccessKey());
+        user.setSecretKey(setUserKey().getSecretKey());
+        boolean saveResult = this.save(user);
+        if (!saveResult) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+        }
+        return user.getId();
+    }
 
     @Override
     public UserVO userLogin(String userAccount, String userPassword, HttpServletResponse res) {
@@ -163,7 +154,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return setUserState(user, res);
     }
-
 
     /**
      * 通过邮箱登录
@@ -203,6 +193,87 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //2.2 用户存在，返回脱敏数据
         BeanUtils.copyProperties(user, userVO);
         return setUserState(user, res);
+    }
+
+    @Override
+    public Long userAdd(UserAddRequest userAddRequest) {
+        long userAdd = userRegisterDetails(userAddRequest.getUserAccount(), userAddRequest.getUserPassword());
+        User user = new User();
+        user.setId(userAdd);
+        //加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userAddRequest.getUserPassword()).getBytes());
+        //赋值
+        BeanUtils.copyProperties(userAddRequest, user);
+        user.setUserPassword(encryptPassword);
+        //插入
+        userMapper.updateById(user);
+        return userAdd;
+    }
+
+    @Override
+    public boolean updateUserByAdmin(UserVO userVO) {
+        if (StringUtils.isAnyBlank(userVO.getUserAccount(), userVO.getUserRole())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
+        }
+        User user = new User();
+        BeanUtils.copyProperties(userVO, user);
+        int i = userMapper.updateById(user);
+        return i > 0;
+    }
+
+    @Override
+    public Page<UserVO> listUserByPage(UserQueryRequest userQueryRequest) {
+        long current = 1;
+        long size = 5;
+        User userQuery = new User();
+        if (userQueryRequest != null) {
+            BeanUtils.copyProperties(userQueryRequest, userQuery);
+            current = userQueryRequest.getCurrent();
+            size = userQueryRequest.getPageSize();
+        }
+        if (size > 50) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "页面一次最多显示50条");
+        }
+        QueryWrapper<User> queryWrapper = this.addCondition(userQuery);
+        Page<User> userPage = this.page(new Page<>(current, size), queryWrapper);
+        Page<UserVO> userVOPage = new PageDTO<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        List<UserVO> userVOList = userPage.getRecords().stream().map(user -> {
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            return userVO;
+        }).collect(Collectors.toList());
+        userVOPage.setRecords(userVOList);
+        return userVOPage;
+    }
+
+    public QueryWrapper<User> addCondition(User userQuery) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        String userName = userQuery.getUserName();
+        if (StringUtils.isNotBlank(userName)) {
+            queryWrapper.like("userName", userName);
+        }
+        Integer gender = userQuery.getGender();
+        if (gender != null) {
+            queryWrapper.eq("gender", gender);
+        }
+        String userRole = userQuery.getUserRole();
+        if (StringUtils.isNotBlank(userRole)) {
+            queryWrapper.like("userRole", userRole);
+        }
+        String userAccount = userQuery.getUserAccount();
+        if (StringUtils.isNotBlank(userAccount)) {
+            queryWrapper.like("userAccount", userAccount);
+        }
+        String email = userQuery.getEmail();
+        if (StringUtils.isNotBlank(email)) {
+            queryWrapper.like("email", email);
+        }
+        Date createTime = userQuery.getCreateTime();
+        if (createTime != null) {
+            queryWrapper.le("createTime", createTime);
+        }
+        return queryWrapper;
+
     }
 
     /**
@@ -327,15 +398,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         loginUser.setUserAvatar(url);
         //更新缓存
         String json = new Gson().toJson(loginUser);
-        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(),json,JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
+        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(), json, JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
         return this.updateById(loginUser);
 
     }
 
     @Override
     public boolean updateUser(UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
-        if(StringUtils.isBlank(userUpdateRequest.getUserName())){
-            throw new BusinessException(ErrorCode.NULL_ERROR,"参数不能为空");
+        if (StringUtils.isBlank(userUpdateRequest.getUserName())) {
+            throw new BusinessException(ErrorCode.NULL_ERROR, "参数不能为空");
         }
         User loginUser = this.getLoginUser(request);
         loginUser.setGender(userUpdateRequest.getGender());
@@ -343,9 +414,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         userMapper.updateById(loginUser);
         //更新缓存
         String json = new Gson().toJson(loginUser);
-        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(),json,JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
+        stringRedisTemplate.opsForValue().set(USER_LOGIN_REDIS + loginUser.getId(), json, JwtUtils.EXPIRE, TimeUnit.MILLISECONDS);
         return this.updateById(loginUser);
     }
+
 
     /**
      * 获取当前登录用户
@@ -451,7 +523,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             }
         }
         return true;
-
     }
 }
 

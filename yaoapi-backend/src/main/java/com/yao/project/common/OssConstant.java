@@ -1,4 +1,4 @@
-package com.yao.project.constant;
+package com.yao.project.common;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;

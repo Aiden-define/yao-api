@@ -1,11 +1,10 @@
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import '@umijs/max';
-import {Button, Modal} from 'antd';
+import { Modal} from 'antd';
 import React from 'react';
 
 export type Props = {
-  //columns: ProColumns<API.InterfaceInfoAddRequest>[];
   onCancel: () => void;
   onSubmit: (values: API.InterfaceInfoAddRequest) => Promise<void>;
   open: boolean;

@@ -1,9 +1,8 @@
 package com.yao.project.controller;
 
+import com.yao.common.commonUtils.Result;
 import com.yao.project.annotation.AuthCheck;
-import com.yao.project.common.Result;
 import com.yao.project.model.vo.InterfaceInfoVo;
-import com.yao.project.service.InterfaceInfoService;
 import com.yao.project.service.UserInterfaceInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;

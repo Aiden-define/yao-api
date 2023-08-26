@@ -1,4 +1,4 @@
-package com.yao.project.common;
+package com.yao.common.commonUtils;
 
 import lombok.Data;
 

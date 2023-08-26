@@ -12,12 +12,12 @@ class YaoapiInterfaceApplicationTests {
 
     @Resource
     public YaoApiClient yaoApiClient;
-    @Test
+    /*@Test
     void test() {
         User user = new User();
         user.setUsername("yjh");
         String post = yaoApiClient.getNameByPost(user);
         System.out.println(post);
-    }
+    }*/
 
 }

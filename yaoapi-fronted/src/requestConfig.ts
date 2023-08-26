@@ -25,7 +25,7 @@ interface ResponseStructure {
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const requestConfig: RequestConfig = {
-    baseURL: 'xxxx',
+    baseURL: 'http://yapi.yprojects.cn:7529',
     //baseURL: 'http://localhost:7529',
     withCredentials: true,
     // 错误处理： umi@3 的错误处理方案。

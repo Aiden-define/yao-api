@@ -44,6 +44,11 @@
             <artifactId>yaoapi-client-sdk</artifactId>
             <version>0.0.1</version>
         </dependency>
+        <!--基于Redis实现防重放-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
 
         <!--yao-common-->
         <dependency>
@@ -96,7 +101,7 @@
                 <configuration>
                     <excludes>
                         <exclude>
-                            <groupId>org.projectlombok</groupId>
+                            <groupId>org.project-lombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>

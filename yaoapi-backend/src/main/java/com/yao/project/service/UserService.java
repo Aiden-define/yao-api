@@ -1,13 +1,11 @@
 package com.yao.project.service;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.vo.UserVO;
-import com.yao.project.model.dto.user.UserAddRequest;
-import com.yao.project.model.dto.user.UserLoginRequest;
-import com.yao.project.model.dto.user.UserRegisterRequest;
-import com.yao.project.model.dto.user.UserUpdateRequest;
+import com.yao.project.model.dto.user.*;
 import com.yao.project.model.vo.UserKeyVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -127,4 +125,26 @@ public interface UserService extends IService<User> {
      * @return
      */
     boolean updateUser(UserUpdateRequest userUpdateRequest, HttpServletRequest request);
+
+    /**
+     * 增加用户
+     * @param userAddRequest
+     * @return
+     */
+    Long userAdd(UserAddRequest userAddRequest);
+
+    /**
+     * 管理员修改用户
+     * @param userVO
+     * @return
+     */
+    boolean updateUserByAdmin(UserVO userVO);
+
+    /**
+     * 分页获取用户列表
+     * @param userQueryRequest
+     * @return
+     */
+    Page<UserVO> listUserByPage(UserQueryRequest userQueryRequest);
+
 }

@@ -1,22 +1,16 @@
 import type {ActionType, ProColumns, ProDescriptionsItemProps} from '@ant-design/pro-components';
-import {
-    PageContainer,
-    ProDescriptions,
-    ProTable,
-} from '@ant-design/pro-components';
-import {Button, Drawer, message} from 'antd';
+import {PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
+import '@umijs/max';
+import {Button, Drawer, Image, message} from 'antd';
 import React, {useRef, useState} from 'react';
-import {SortOrder} from "antd/es/table/interface";
-import CreateModal from "@/pages/Admin/InterfaceInfo/components/CreateModal";
-import UpdateModal from "./components/UpdateModal";
+import type {SortOrder} from 'antd/es/table/interface';
 import {
-    addInterfaceInfoUsingPOST,
-    deleteInterfaceInfoUsingPOST,
-    interfaceOffLineUsingPOST,
-    interfaceOnLineUsingPOST,
-    listInterfaceInfoByPageUsingGET,
-    updateInterfaceInfoUsingPOST
-} from "@/services/yaoapi-backend/interfaceInfoController";
+    addUserUsingPOST,
+    deleteUserUsingPOST,
+    listUserByPageUsingGET, updateUserByAdminUsingPOST
+} from "@/services/yaoapi-backend/userController";
+import UpdateModal from "@/pages/Admin/UserManager/components/UpdateModal";
+import CreateModal from "@/pages/Admin/UserManager/components/CreateModal";
 
 const TableList: React.FC = () => {
     /**
@@ -31,36 +25,8 @@ const TableList: React.FC = () => {
     const [updateModalVisible, handleUpdateModalVisible] = useState<boolean>(false);
     const [showDetail, setShowDetail] = useState<boolean>(false);
     const actionRef = useRef<ActionType>();
-    const [currentRow, setCurrentRow] = useState<API.InterfaceInfo>();
-    const [setSelectedRows] = useState<API.InterfaceInfo[]>([]);
-
-    /**
-     * @en-US Add node
-     * @zh-CN 添加节点
-     * @param fields
-     */
-    const handleAdd = async (fields: API.InterfaceInfo) => {
-        const hide = message.loading('正在添加');
-        try {
-            const res = await addInterfaceInfoUsingPOST({
-                ...fields,
-            });
-            if (res.code === 200) {
-                message.success('接口创建成功');
-            }
-            hide();
-            if (res.code !== 200) {
-                message.error(res.description)
-            }
-
-            handleModalVisible(false);
-            return true;
-        } catch (error: any) {
-            hide();
-            message.error('创建失败，' + error.message);
-            return false;
-        }
-    };
+    const [currentRow, setCurrentRow] = useState<API.UserVO>();
+    const [setSelectedRows] = useState<API.UserVO[]>([]);
 
     /**
      * @en-US Update node
@@ -68,65 +34,15 @@ const TableList: React.FC = () => {
      *
      * @param fields
      */
-    const handleUpdate = async (fields: API.InterfaceInfo) => {
+    const handleUpdate = async (fields: API.UserVO) => {
         if (!currentRow) {
             return;
         }
         const hide = message.loading('修改中');
         try {
-            await updateInterfaceInfoUsingPOST({
+            await updateUserByAdminUsingPOST({
                 id: currentRow.id,
-                ...fields
-            });
-            hide();
-            message.success('操作成功');
-            return true;
-        } catch (error: any) {
-            hide();
-            message.error('操作失败，' + error.message);
-            return false;
-        }
-    };
-
-    /**
-     * 发布接口
-     *
-     * @param record
-     */
-    const handleOnline = async (record: API.IdRequest) => {
-        const hide = message.loading('发布中');
-        if (!record) return true;
-        try {
-            const res = await interfaceOnLineUsingPOST({
-                id: record.id
-            });
-            hide();
-            if (res.code === 200) {
-                message.success('操作成功');
-                actionRef.current?.reload();
-                return true;
-            }
-            if (res.code !== 200) {
-                message.error(res.description)
-            }
-        } catch (error: any) {
-            hide();
-            message.error('操作失败，' + error.message);
-            return false;
-        }
-    };
-
-    /**
-     * 下线接口
-     *
-     * @param record
-     */
-    const handleOffline = async (record: API.IdRequest) => {
-        const hide = message.loading('发布中');
-        if (!record) return true;
-        try {
-            await interfaceOffLineUsingPOST({
-                id: record.id
+                ...fields,
             });
             hide();
             message.success('操作成功');
@@ -134,7 +50,30 @@ const TableList: React.FC = () => {
             return true;
         } catch (error: any) {
             hide();
-            message.error('操作失败，' + error.message);
+            message.error('操作失败' + error.message);
+            return false;
+        }
+    };
+
+    /**
+     * @en-US Add node
+     * @zh-CN 添加节点
+     * @param fields
+     */
+    const handleAdd = async (fields: API.UserAddRequest) => {
+        const hide = message.loading('正在添加');
+        try {
+            await addUserUsingPOST({
+                ...fields,
+            });
+            hide();
+            message.success('创建成功');
+            handleModalVisible(false);
+            actionRef.current?.reload();
+            return true;
+        } catch (error: any) {
+            hide();
+            message.error('创建失败，' + error.message);
             return false;
         }
     };
@@ -145,16 +84,17 @@ const TableList: React.FC = () => {
      *
      * @param record
      */
-    const handleRemove = async (record: API.InterfaceInfo) => {
+    const handleRemove = async (record: API.UserVO) => {
         const hide = message.loading('正在删除');
         if (!record) return true;
         try {
-            await deleteInterfaceInfoUsingPOST({
-                id: record.id
+            await deleteUserUsingPOST({
+                id: record.id,
             });
             hide();
             message.success('删除成功');
             actionRef.current?.reload();
+
             return true;
         } catch (error: any) {
             hide();
@@ -162,74 +102,104 @@ const TableList: React.FC = () => {
             return false;
         }
     };
-    const columns: ProColumns<API.InterfaceInfo>[] = [
+
+    const columns: ProColumns<API.UserVO>[] = [
         {
-            title: '名称',
-            dataIndex: 'name',
-            tip: '接口的名称',
+            title: 'id',
+            dataIndex: 'id',
+            valueType: 'index',
+            width: 50,
+        },
+        {
+            title: '用户昵称',
+            dataIndex: 'userName',
+            valueType: 'text',
+        },
+        {
+            title: '用户账号',
+            dataIndex: 'userAccount',
+            valueType: 'text',
             formItemProps: {
-                rules: [{
-                    required: true,
-                }]
-            }
+                rules: [
+                    {
+                        required: true,
+                    },
+                ],
+            },
+            ellipsis: true,
         },
+
         {
-            title: '描述',
-            dataIndex: 'description',
-            valueType: 'textarea',
-        },
-        {
-            title: '请求头',
-            dataIndex: 'requestHeader',
-            sorter: true,
-            hideInForm: true,
-            valueType: 'text'
-        },
-        {
-            title: '请求参数(示例)',
-            dataIndex: 'requestParams',
+            title: '用户头像',
+            dataIndex: 'userAvatar',
             valueType: 'text',
+            render: (_, record) => (
+                <div>
+                    <Image src={record.userAvatar} width={100}/>
+                </div>
+            ),
+            hideInSearch: true,
         },
         {
-            title: '响应头',
-            dataIndex: 'responseHeader',
-            hideInForm: true,
-            valueType: 'text'
-        },
-        {
-            title: '请求方法',
-            dataIndex: 'method',
+            title: '性别',
+            dataIndex: 'gender',
             valueType: 'text',
+            width: 50,
+            valueEnum: new Map([
+                [1, '女'],
+                [0, '男'],
+            ]),
         },
         {
-            title: 'url',
-            dataIndex: 'url',
-            valueType: 'text',
-        },
-        {
-            title: '请求状态',
-            sorter: true,
-            dataIndex: 'status',
+            title: '角色',
+            dataIndex: 'userRole',
             valueEnum: {
-                0: {
-                    text: '关闭',
-                    status: 'Default'
+                user: {
+                    text: '用户',
+                    status: 'Default',
                 },
-                1: {
-                    text: '开启',
-                    status: 'Processing'
-                }
-            }
+                admin: {
+                    text: '管理员',
+                    status: 'Processing',
+                },
+            },
+            formItemProps: {
+                rules: [
+                    {
+                        required: true,
+                    },
+                ],
+            },
+        },
+
+        {
+            title: '邮箱',
+            dataIndex: 'email',
+            valueType: 'text',
+        },
+        {
+            title: '创建时间',
+            dataIndex: 'createTime',
+            valueType: 'dateTime',
+            hideInForm: true,
+        },
+        {
+            title: '更新时间',
+            dataIndex: 'updateTime',
+            valueType: 'dateTime',
+            hideInTable: true,
+            hideInForm: true,
+            hideInSearch: true,
         },
         {
             title: '操作',
             dataIndex: 'option',
             valueType: 'option',
-            render: (_, record,) => [
-
+            render: (_, record) => [
                 <Button
-                    type="text"
-                    key="update"
+                    size={'small'}
+                    type={'text'}
+                    key="edit"
                     onClick={() => {
                         handleUpdateModalVisible(true);
                         setCurrentRow(record);
@@ -237,29 +207,11 @@ const TableList: React.FC = () => {
                 >
                     修改
                 </Button>,
-                record.status === 0 ? <Button
-                    type="text"
-                    key="online"
-                    onClick={() => {
-                        handleOnline(record);
-                    }}
-                >
-                    发布
-                </Button> : <Button
-                    type="text"
-                    key="online"
-                    danger
-                    onClick={() => {
-                        handleOffline(record);
-                    }}
-                >
-                    下线
-                </Button>,
                 <Button
-                    type="text"
-                    key="remove"
-                    size={"middle"}
+                    type={'text'}
+                    size={'small'}
                     danger
+                    key="remove"
                     onClick={() => {
                         handleRemove(record);
                     }}
@@ -268,7 +220,6 @@ const TableList: React.FC = () => {
                 </Button>,
             ],
         },
-
     ];
 
     return (
@@ -300,7 +251,7 @@ const TableList: React.FC = () => {
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         filter: Record<string, React.ReactText[] | null>,
                     ) => {
-                        const res: any = await listInterfaceInfoByPageUsingGET({
+                        const res: any = await listUserByPageUsingGET({
                             ...params,
                         });
                         //使用数据
@@ -318,6 +269,7 @@ const TableList: React.FC = () => {
                             };
                         }
                     }}
+                // @ts-ignore
                 columns={columns}
                 rowSelection={{
                     onChange: (_, selectedRows) => {
@@ -325,22 +277,6 @@ const TableList: React.FC = () => {
                         setSelectedRows(selectedRows);
                     },
                 }}
-            />
-            <CreateModal
-                onSubmit={async (values) => {
-                    const success = await handleAdd(values);
-                    if (success) {
-                        handleModalVisible(false);
-                        setCurrentRow(undefined);
-                        if (actionRef.current) {
-                            actionRef.current.reload();
-                        }
-                    }
-                }}
-                onCancel={() => {
-                    handleModalVisible(false);
-                }}
-                open={createModalVisible}
             />
             <UpdateModal
                 onSubmit={async (value) => {
@@ -361,33 +297,49 @@ const TableList: React.FC = () => {
                 }}
                 open={updateModalVisible}
                 values={currentRow || {}}
+                columns={columns}
             />
 
             <Drawer
                 width={600}
-                open={showDetail}
+                visible={showDetail}
                 onClose={() => {
                     setCurrentRow(undefined);
                     setShowDetail(false);
                 }}
                 closable={false}
             >
-                {currentRow?.name && (
+                {currentRow?.userAccount && (
                     <ProDescriptions<API.RuleListItem>
                         column={2}
-                        title={currentRow?.name}
+                        title={currentRow?.userAccount}
                         request={async () => ({
                             data: currentRow || {},
                         })}
                         params={{
-                            id: currentRow?.name,
+                            id: currentRow?.userAccount,
                         }}
                         columns={columns as ProDescriptionsItemProps<API.RuleListItem>[]}
                     />
                 )}
             </Drawer>
+            <CreateModal
+                onSubmit={async (values) => {
+                    const success = await handleAdd(values);
+                    if (success) {
+                        handleModalVisible(false);
+                        setCurrentRow(undefined);
+                        if (actionRef.current) {
+                            actionRef.current.reload();
+                        }
+                    }
+                }}
+                onCancel={() => {
+                    handleModalVisible(false);
+                }}
+                open={createModalVisible}
+            />
         </PageContainer>
     );
 };
-
 export default TableList;

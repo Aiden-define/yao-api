@@ -1,11 +1,10 @@
 package com.yao.project.aop;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.exception.BusinessException;
 import com.yao.common.model.entity.User;
-import com.yao.common.model.vo.UserVO;
 import com.yao.project.annotation.AuthCheck;
-import com.yao.project.common.ErrorCode;
-import com.yao.project.exception.BusinessException;
 import com.yao.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -44,7 +43,6 @@ public class AuthInterceptor {
      * @return
      */
     @Around("@annotation(authCheck)")
-    @Order(4)
     public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck authCheck) throws Throwable {
         List<String> anyRole = Arrays.stream(authCheck.anyRole()).filter(StringUtils::isNotBlank).collect(Collectors.toList());
         String mustRole = authCheck.mustRole();

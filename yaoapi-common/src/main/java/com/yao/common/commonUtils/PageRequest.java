@@ -1,6 +1,5 @@
-package com.yao.project.common;
+package com.yao.common.commonUtils;
 
-import com.yao.project.constant.CommonConstant;
 import lombok.Data;
 
 /**
@@ -29,5 +28,5 @@ public class PageRequest {
     /**
      * 排序顺序（默认升序）
      */
-    private String sortOrder = CommonConstant.SORT_ORDER_ASC;
+    private String sortOrder = "asc";
 }

@@ -2,8 +2,8 @@ package com.yao.project.common;
 
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.model.PutObjectResult;
-import com.yao.project.constant.OssConstant;
-import com.yao.project.exception.BusinessException;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +28,7 @@ public class AliyunOSSUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(AliyunOSSUtil.class);
 
-    private static final List<String> TYPE_OF_FILE = Arrays.asList("image/jpg", "image/png", "image/gif");
+    private static final List<String> TYPE_OF_FILE = Arrays.asList("image/jpg","image/jpeg", "image/png", "image/gif");
     private static final int MAX_PIC = 2 * 1024 * 1024;
 
     public static String OSSUploadFile(MultipartFile file) {

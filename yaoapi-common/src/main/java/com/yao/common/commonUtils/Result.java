@@ -1,4 +1,4 @@
-package com.yao.project.common;
+package com.yao.common.commonUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,13 +13,13 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public  class  Result<T> implements Serializable {
+public  class Result<T> implements Serializable {
     private Integer code;
     private T data;
     private String message;
     private String description;
 
-    public Result(T data, Integer code,String message) {
+    public Result(T data, Integer code, String message) {
         this.data = data;
         this.code = code;
         this.message = message;

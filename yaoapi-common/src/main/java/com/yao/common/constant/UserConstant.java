@@ -1,4 +1,4 @@
-package com.yao.project.constant;
+package com.yao.common.constant;
 
 /**
  * 用户常量

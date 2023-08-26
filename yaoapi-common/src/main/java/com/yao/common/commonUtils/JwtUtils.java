@@ -1,14 +1,12 @@
-package com.yao.project.common;
-import com.yao.project.exception.BusinessException;
+package com.yao.common.commonUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.yao.common.exception.BusinessException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.Date;
 
 /**

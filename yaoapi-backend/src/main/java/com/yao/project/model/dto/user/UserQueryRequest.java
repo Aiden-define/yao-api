@@ -1,6 +1,6 @@
 package com.yao.project.model.dto.user;
 
-import com.yao.project.common.PageRequest;
+import com.yao.common.commonUtils.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -55,10 +55,6 @@ public class UserQueryRequest extends PageRequest implements Serializable {
      */
     private Date createTime;
 
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
 
     private static final long serialVersionUID = 1L;
 }

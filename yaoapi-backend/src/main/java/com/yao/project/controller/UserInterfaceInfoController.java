@@ -1,16 +1,15 @@
 package com.yao.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yao.common.commonUtils.DeleteRequest;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.commonUtils.Result;
+import com.yao.common.constant.CommonConstant;
+import com.yao.common.exception.BusinessException;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.entity.UserInterfaceInfo;
 import com.yao.project.annotation.AuthCheck;
-import com.yao.project.common.DeleteRequest;
-import com.yao.project.common.ErrorCode;
-import com.yao.project.common.Result;
-import com.yao.project.constant.CommonConstant;
-import com.yao.project.exception.BusinessException;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoQueryRequest;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoUpdateRequest;

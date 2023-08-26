@@ -1,8 +1,8 @@
-package com.yao.project.exception;
+package com.yao.common.exception;
 
 
-import com.yao.project.common.ErrorCode;
-import com.yao.project.common.Result;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.commonUtils.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

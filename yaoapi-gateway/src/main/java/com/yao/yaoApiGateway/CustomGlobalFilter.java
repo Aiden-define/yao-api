@@ -22,6 +22,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -32,16 +33,20 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
 public class CustomGlobalFilter implements GlobalFilter, Ordered {
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
     @DubboReference
     private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
     @DubboReference
@@ -52,77 +57,82 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        //1. 用户发送请求到API网关
-        //2. 请求日志
+        /*
+        1.请求日志
+        2.黑白名单
+        3.用户鉴权(API签名认证)
+        4.随机数配合时间戳：防重放
+        5.接口参数是否正确
+        6.判断调用次数
+        7.获取响应结果，打上响应日志
+        8.接口调用次数+1
+        */
+        // 用户发送请求到API网关
+        //1. 请求日志
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().toString();
+        String sourceAddress = request.getLocalAddress().getHostString();
+
         log.info("请求唯一标识：" + request.getId());
         log.info("请求路径：" + path);
-        try {
-            log.info("请求body：" + URLDecoder.decode(Objects.requireNonNull(request.getHeaders().getFirst("body")), "utf-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
         log.info("请求方法：" + request.getMethod());
         log.info("请求参数：" + request.getQueryParams());
-        String sourceAddress = request.getLocalAddress().getHostString();
-        IP_WHITE_LIST.add(sourceAddress);
         log.info("请求来源地址：" + sourceAddress);
-        //3. 黑白名单
+
+        //2. 黑白名单(暂未实现）
+        IP_WHITE_LIST.add(sourceAddress);
         ServerHttpResponse response = exchange.getResponse();
         if (!IP_WHITE_LIST.contains(sourceAddress)) {
             response.setStatusCode(HttpStatus.FORBIDDEN);
             return response.setComplete();
         }
 
-        //4. 用户鉴权（判断ak、sk是否合法）
+        //3. 用户鉴权（判断ak、sk是否合法）
         HttpHeaders headers = request.getHeaders();
-        //Flux<DataBuffer> body1 = request.getBody();
-        //String r = body1.toString();
         String accessKey = headers.getFirst("accessKey");
         //传入的参数
-        String body1 = headers.getFirst("body");
+        String bodyOrigin = headers.getFirst("body");
         String body = null;
         try {
-            body = URLDecoder.decode(body1, "UTF-8");
+            body = URLDecoder.decode(bodyOrigin, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-
-        //sign:把密钥和传入的值加密成一个签名
-        String sign = headers.getFirst("sign");
-        //随机数：防重放
-        String nonce = headers.getFirst("nonce");
-        //时间戳
-        String timestamp = headers.getFirst("timestamp");
-        /*
-         进行权限判断
-         */
+        log.info("请求体："+body);
         //查询数据库判断是否发配给用户密钥
         User user = innerUserService.getInvokeUser(accessKey);
-
         if (user == null) {
             return handleInvokeError(response);
         }
+        //密钥鉴权
         Long userId = user.getId();
         if (accessKey != null && !accessKey.equals(user.getAccessKey())) {
             return handleNoAuth(response);
         }
-        if (nonce != null && Long.parseLong(nonce) > 10000) {
-            return handleNoAuth(response);
-        }
-        //时间和当前时间应不超过5分钟
-        /*if()*/
-        long currentTime = System.currentTimeMillis() / 1000;
-        if (timestamp != null && currentTime - Long.parseLong(timestamp) > 60 * 5) {
-            return handleNoAuth(response);
-        }
-        //从查出secretKey
+        //sign:把密钥和传入的值加密成一个签名
+        String sign = headers.getFirst("sign");
+        //AK/SK鉴权
         String secretKey = user.getSecretKey();
         String serverSign = SignUtils.getSign(body, accessKey, secretKey);
         if (sign != null && !sign.equals(serverSign)) {
             return handleNoAuth(response);
         }
+
+        //4、随机数配合时间戳：防重放
+        //时间戳
+        String timestamp = headers.getFirst("timestamp");
+        //时间和当前时间应不超过10分钟
+        long currentTime = System.currentTimeMillis() / 1000;
+        if (timestamp != null && currentTime - Long.parseLong(timestamp) > 60 * 5) {
+            return handleNoAuth(response);
+        }
+        String nonce = headers.getFirst("nonce");
+        Boolean aBoolean = stringRedisTemplate.opsForValue().setIfAbsent(nonce, "ok", 10, TimeUnit.MINUTES);
+        if (Boolean.FALSE.equals(aBoolean)) {
+            return handleNoAuth(response);
+        }
+
+
         //5. 请求的模拟接口是否存在
         //从数据库查询接口是否存在，一起请求方法是否匹配
         InterfaceInfo interfaceInfo = innerInterfaceInfoService.getInterfaceInfo("http://localhost:8888" + path, String.valueOf(request.getMethod()));
@@ -131,15 +141,16 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return handleInvokeNotFound(response);
         }
         Long interfaceInfoId = interfaceInfo.getId();
-        /*  请求转发，调用模拟接口
-        Mono<Void> filter = chain.filter(exchange);*/
-        //6.该用户是否还有调用次数
 
+
+        //6.该用户是否还有调用次数
         boolean times = innerUserInterfaceInfoService.callTimes(interfaceInfoId, userId);
         //次数不足抛403，注意对接
         if (!times) {
             return handleInvokeForbidden(response);
         }
+        /*  请求转发，调用模拟接口
+        Mono<Void> filter = chain.filter(exchange);*/
         //7. 响应日志
         log.info("custom global filter");
         return handleResponse(exchange, chain, interfaceInfoId, userId);

@@ -3,8 +3,6 @@ package com.yao.project.service.Inner;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.yao.common.model.entity.User;
 import com.yao.common.service.InnerUserService;
-import com.yao.project.common.ErrorCode;
-import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.UserMapper;
 import org.apache.dubbo.config.annotation.DubboService;
 

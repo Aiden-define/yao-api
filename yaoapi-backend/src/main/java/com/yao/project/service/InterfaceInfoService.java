@@ -3,8 +3,8 @@ package com.yao.project.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yao.common.commonUtils.IdRequest;
 import com.yao.common.model.entity.InterfaceInfo;
-import com.yao.project.common.IdRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.yao.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 
@@ -58,6 +58,6 @@ public interface InterfaceInfoService extends IService<InterfaceInfo> {
      * @param idRequest
      * @return
      */
-    Boolean interfaceOnLine(IdRequest idRequest,HttpServletRequest request);
+    Boolean interfaceOnLine(IdRequest idRequest, HttpServletRequest request);
 
 }

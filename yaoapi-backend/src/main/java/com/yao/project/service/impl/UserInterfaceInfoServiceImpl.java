@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
+import com.yao.common.commonUtils.ErrorCode;
+import com.yao.common.exception.BusinessException;
 import com.yao.common.model.entity.InterfaceInfo;
 import com.yao.common.model.entity.User;
 import com.yao.common.model.entity.UserInterfaceInfo;
-import com.yao.project.common.ErrorCode;
-import com.yao.project.exception.BusinessException;
 import com.yao.project.mapper.InterfaceInfoMapper;
 import com.yao.project.mapper.UserInterfaceInfoMapper;
 import com.yao.project.model.dto.userInterfaceInfo.UserInterfaceInfoAddRequest;
@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.yao.project.constant.UserConstant.USER_INTERFACE;
+import static com.yao.common.constant.UserConstant.USER_INTERFACE;
+
 
 /**
  * @author DH

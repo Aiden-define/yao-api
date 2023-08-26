@@ -414,6 +414,11 @@ declare namespace API {
     email: string;
   };
 
+  type UserAddRequest = {
+    userAccount?: string;
+    userPassword?: string;
+  };
+
   type UserInterfaceInfo = {
     createTime?: string;
     id?: number;
@@ -466,6 +471,7 @@ declare namespace API {
 
   type UserVO = {
     createTime?: string;
+    email?: string;
     gender?: number;
     id?: number;
     userAccount?: string;

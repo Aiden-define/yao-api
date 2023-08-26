@@ -1,6 +1,6 @@
 package com.yao.project.model.dto.userInterfaceInfo;
 
-import com.yao.project.common.PageRequest;
+import com.yao.common.commonUtils.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

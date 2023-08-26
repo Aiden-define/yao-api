@@ -22,20 +22,4 @@ public class Lives {
     private String temperature_float;
     private String humidity_float;
 
-    @Override
-    public String toString() {
-        return "Lives{" +
-                "province='" + province + '\'' +
-                ", city='" + city + '\'' +
-                ", adcode='" + adcode + '\'' +
-                ", weather='" + weather + '\'' +
-                ", temperature='" + temperature + '\'' +
-                ", winddirection='" + winddirection + '\'' +
-                ", windpower='" + windpower + '\'' +
-                ", humidity='" + humidity + '\'' +
-                ", reporttime='" + reporttime + '\'' +
-                ", temperature_float='" + temperature_float + '\'' +
-                ", humidity_float='" + humidity_float + '\'' +
-                '}';
-    }
 }
