@@ -23,7 +23,7 @@ export async function getInitialState(): Promise<InitialState> {
   };
   try {
     const res = await getLoginUserUsingGET();
-    //console.log(res);
+    console.log(res);
     if (res.code === 200) {
       state.loginUser = res.data;
     }

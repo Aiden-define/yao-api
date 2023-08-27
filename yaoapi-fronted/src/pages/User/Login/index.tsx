@@ -79,6 +79,7 @@ const Login: React.FC = () => {
         }, 10);
         return;
       }else{
+        console.log(res.code)
         message.error(res.description)
       }
     } catch (error) {
