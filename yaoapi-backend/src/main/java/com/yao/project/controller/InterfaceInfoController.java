@@ -20,6 +20,7 @@ import com.yao.project.service.InterfaceInfoService;
 import com.yao.project.service.UserInterfaceInfoService;
 import com.yao.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -201,7 +202,11 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Boolean updateById = interfaceInfoService.interfaceOnLine(idRequest,request);
-        return Result.success(updateById);
+        if(!updateById){
+            //return Result.fail(ErrorCode.OPERATION_ERROR,"模拟调用错误","接口模拟调用失败");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"接口模拟调用失败");
+        }
+        return Result.success(true);
     }
     /**
      * 接口下线

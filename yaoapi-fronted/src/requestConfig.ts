@@ -25,8 +25,8 @@ interface ResponseStructure {
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const requestConfig: RequestConfig = {
-    baseURL: 'http://yapi.yprojects.cn:7529',
-    //baseURL: 'http://localhost:7529',
+    //baseURL: 'http://yapi.yprojects.cn:7529',
+    baseURL: 'http://localhost:7529',
     withCredentials: true,
     // 错误处理： umi@3 的错误处理方案。
     errorConfig: {
@@ -75,7 +75,7 @@ export const requestConfig: RequestConfig = {
             } else if (error.response) {
                 // Axios 的错误
                 // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-                message.error(`Response status:${error.response.status}`);
+                //message.error(`Response status:${error.response.status}`);
             } else if (error.request) {
                 // 请求已经成功发起，但没有收到响应
                 // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，

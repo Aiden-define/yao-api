@@ -184,11 +184,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INTERFACE_ERROR, "接口调用出错");
         }
-        if(object==null){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口模拟调用失败");
-        }
-        if (StringUtils.isBlank(object.toString())) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口模拟调用失败");
+        if(object==null||StringUtils.isBlank(object.toString())){
+            return false;
         }
         //对返回数据校验
         catchErrorCode(object);

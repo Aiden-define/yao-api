@@ -433,11 +433,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         String userJson = stringRedisTemplate.opsForValue().get(USER_LOGIN_REDIS + userId);
-        User user = new Gson().fromJson(userJson, User.class);
-        if (user == null) {
+        if (StringUtils.isBlank(userJson)) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
-        return user;
+
+        return new Gson().fromJson(userJson, User.class);
     }
 
 

@@ -1,8 +1,9 @@
-package com.yao.common.exception;
+package com.yao.project.exception;
 
 
 import com.yao.common.commonUtils.ErrorCode;
 import com.yao.common.commonUtils.Result;
+import com.yao.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,8 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public Result businessException(BusinessException e){
+    @ExceptionHandler(com.yao.common.exception.BusinessException.class)
+    public Result businessException(com.yao.common.exception.BusinessException e){
         log.error("businessException",e.getMessage(),e);
         return Result.fail(e.getCode(), e.getMessage(), e.getDescription());
     }

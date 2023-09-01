@@ -6,7 +6,6 @@ com\yao\common\commonUtils\PageRequest.class
 com\yao\common\service\InnerUserService.class
 com\yao\common\commonUtils\Result.class
 com\yao\common\service\InnerUserInterfaceInfoService.class
-com\yao\common\exception\GlobalExceptionHandler.class
 com\yao\common\model\vo\UserVO.class
 com\yao\common\model\entity\User.class
 com\yao\common\service\InnerInterfaceInfoService.class

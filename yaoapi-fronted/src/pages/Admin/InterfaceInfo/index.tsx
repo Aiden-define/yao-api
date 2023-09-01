@@ -100,17 +100,19 @@ const TableList: React.FC = () => {
             const res = await interfaceOnLineUsingPOST({
                 id: record.id
             });
+            console.log(res.code)
             hide();
             if (res.code === 200) {
                 message.success('操作成功');
                 actionRef.current?.reload();
                 return true;
-            }
-            if (res.code !== 200) {
+            }else{
                 message.error(res.description)
             }
+
         } catch (error: any) {
             hide();
+            console.log("error")
             message.error('操作失败，' + error.message);
             return false;
         }
